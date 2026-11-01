@@ -40,6 +40,16 @@ After the first start the hub appears in the app on the node list of that wallet
 Everything that goes through the tunnel is encrypted end to end with a key derived from the pairing
 key (`tunel.md`); the server only forwards opaque frames. Only private addresses are reachable.
 
+## Home Assistant add-on
+
+The same hub as an add-on, for people who run Home Assistant OS or Supervised:
+
+1. Settings → Add-ons → Add-on store → ⋮ → **Repositories** → add `https://github.com/sensmos-network/sensmos-hub`.
+2. Install **Sensmos Hub**, fill in **owner** (wallet address) and optionally **pin**, start it.
+3. Pair from the app as above; the HA panel integration then points at this machine, port 8123.
+
+The add-on uses the published Docker image (`addon/sensmos_hub/`), with host networking.
+
 ## Files in `data/`
 
 | file | what |
