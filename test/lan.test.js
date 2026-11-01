@@ -56,3 +56,29 @@ test('measure: tcp do lokalnego serwera i do zamkniętego portu', async () => {
     assert.strictEqual((await measure.tcp('127.0.0.1', port, 1000)).ok, false);
     assert.deepStrictEqual(await measure.run([{ kind: 'trace', host: '1.1.1.1' }]), [], 'trace pomijany');
 });
+
+test('measure: parsowanie ping z Linuksa i Windows', () => {
+    const linux = `PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
+64 bytes from 1.1.1.1: icmp_seq=1 ttl=57 time=9.84 ms
+64 bytes from 1.1.1.1: icmp_seq=2 ttl=57 time=10.2 ms
+
+--- 1.1.1.1 ping statistics ---
+4 packets transmitted, 3 received, 25% packet loss, time 601ms
+rtt min/avg/max/mdev = 9.840/10.113/10.400/0.230 ms
+`;
+    assert.deepStrictEqual(measure.parsePing(linux, 4, false), { ok: true, loss: 25, n: 4, rtt: 10.113, jit: 0.23 });
+    const linuxDead = `--- 10.0.0.9 ping statistics ---
+4 packets transmitted, 0 received, 100% packet loss, time 3091ms
+`;
+    assert.deepStrictEqual(measure.parsePing(linuxDead, 4, false), { ok: false, loss: 100, n: 4 });
+    const win = `Pinging 1.1.1.1 with 32 bytes of data:
+Reply from 1.1.1.1: bytes=32 time=10ms TTL=57
+
+Ping statistics for 1.1.1.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 9ms, Maximum = 13ms, Average = 11ms
+`;
+    assert.deepStrictEqual(measure.parsePing(win, 4, true), { ok: true, loss: 0, n: 4, rtt: 11, jit: 2 });
+    assert.strictEqual(measure.parsePing('ping: unknown host', 4, false), null);
+});

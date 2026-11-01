@@ -7,20 +7,29 @@ const os = require('os');
 
 const PING_TIMEOUT_S = 2;
 
+// Wyjście `ping` → { ok, loss, n, rtt?, jit? } albo null, gdy nic nie da się odczytać.
+// Linux (iputils): "4 packets transmitted, 4 received, 0% packet loss" + "rtt min/avg/max/mdev = a/b/c/d ms".
+// Windows: "Lost = 0 (0% loss)" + "Minimum = 10ms, Maximum = 12ms, Average = 11ms".
+function parsePing(out, count, win = os.platform() === 'win32') {
+    out = String(out || '');
+    const loss = out.match(/(\d+(?:[.,]\d+)?)%/);
+    const rtt = win ? out.match(/=\s*(\d+)ms[^=]*=\s*(\d+)ms[^=]*=\s*(\d+)ms/)
+                    : out.match(/= ([\d.]+)\/([\d.]+)\/([\d.]+)\/([\d.]+) ms/);
+    if (!loss && !rtt) return null;
+    const lossPct = loss ? parseFloat(loss[1].replace(',', '.')) : 100;
+    const r = rtt ? (win ? { rtt: +rtt[3], jit: Math.max(0, (+rtt[2] - +rtt[1]) / 2) } : { rtt: +rtt[2], jit: +rtt[4] }) : null;
+    return { ok: !!r && lossPct < 100, loss: lossPct, n: count, ...(r || {}) };
+}
+
 function ping(host, count) {
     const win = os.platform() === 'win32';
     const args = win ? ['-n', String(count), '-w', String(PING_TIMEOUT_S * 1000), host]
                      : ['-n', '-c', String(count), '-W', String(PING_TIMEOUT_S), '-i', '0.2', host];
     return new Promise(resolve => {
         execFile('ping', args, { timeout: (count + 2) * PING_TIMEOUT_S * 1000 }, (err, stdout) => {
-            const out = String(stdout || '');
-            const loss = out.match(/(\d+(?:[.,]\d+)?)%/);
-            const rtt = win ? out.match(/=\s*(\d+)ms[^=]*=\s*(\d+)ms[^=]*=\s*(\d+)ms/)
-                            : out.match(/= ([\d.]+)\/([\d.]+)\/([\d.]+)\/([\d.]+) ms/);
-            if (!loss && !rtt) return resolve(err && err.code === 'ENOENT' ? null : { ok: false, loss: 100, n: count });
-            const lossPct = loss ? parseFloat(loss[1].replace(',', '.')) : 100;
-            const r = rtt ? (win ? { rtt: +rtt[3], jit: Math.max(0, (+rtt[2] - +rtt[1]) / 2) } : { rtt: +rtt[2], jit: +rtt[4] }) : null;
-            resolve({ ok: !!r && lossPct < 100, loss: lossPct, n: count, ...(r || {}) });
+            const r = parsePing(stdout, count, win);
+            if (r) return resolve(r);
+            resolve(err && err.code === 'ENOENT' ? null : { ok: false, loss: 100, n: count });
         });
     });
 }
@@ -95,4 +104,4 @@ async function run(jobs) {
     return out.slice(0, 64);
 }
 
-module.exports = { run, ping, tcp };
+module.exports = { run, ping, parsePing, tcp };
