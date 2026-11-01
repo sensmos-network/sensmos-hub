@@ -14,7 +14,7 @@ const mdns = require('./mdns');
 const BE_PUB = require('./be_pub');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
-const QUIET = new Set(['tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong']);
+const QUIET = new Set(['cn_config', 'tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong']);
 
 class Hub {
     constructor(cfg) {
