@@ -1,0 +1,9 @@
+FROM node:22-alpine
+RUN apk add --no-cache iputils-ping iproute2
+WORKDIR /app
+COPY package.json ./
+RUN npm install --omit=dev --no-audit --no-fund
+COPY src ./src
+ENV HUB_DATA=/data HUB_PORT=8080
+VOLUME /data
+CMD ["node", "src/index.js"]

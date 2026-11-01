@@ -1,0 +1,12 @@
+services:
+  hub:
+    build: .
+    image: sensmos-hub:0.1
+    container_name: sensmos-hub
+    # host networking: the phone pairs over LAN (port HUB_PORT), the tunnel reaches LAN devices,
+    # and `ping` measures the real home link, not Docker's bridge.
+    network_mode: host
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/data
