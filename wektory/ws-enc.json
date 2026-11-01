@@ -1,0 +1,54 @@
+{
+  "spec": "protokol/ws.md §1.2",
+  "be_priv": "1111111111111111111111111111111111111111111111111111111111111111",
+  "be_pub": "044f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa385b6b1b8ead809ca67454d9683fcf2ba03456d6fe2c4abe2b07f0fbdbb2f1c1",
+  "node_priv": "2222222222222222222222222222222222222222222222222222222222222222",
+  "node_pub": "04466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f276728176c3c6431f8eeda4538dc37c865e2784f3a9e77d044f33e407797e1278a",
+  "fw_nonce": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+  "be_nonce": "b0b1b2b3b4b5b6b7b8b9babbbcbdbebf",
+  "shared_x": "77e0510d5042e2f5e9e59c977b81eeed590cf7d20c1c51da451a8eaa9fdc45ff",
+  "key_fw2be": "841a0d466f8fc33eedd4b13220a29c55",
+  "key_be2fw": "46d6b5d49ec6bf5faa04940cd5770ba6",
+  "frames": [
+    {
+      "dir": "fw2be",
+      "ver": 1,
+      "seq": 0,
+      "pt": "{\"type\":\"ping\",\"device_id\":\"x\",\"free\":1}",
+      "frame": "010000000000000000581e229f11848dbce7d8819139c9cc72f12bf8a92ac34615c46ca7bd82e83e2c6517601a41f586fea49a6b9447548ac403295acc34537d26"
+    },
+    {
+      "dir": "fw2be",
+      "ver": 1,
+      "seq": 1,
+      "pt": "{\"type\":\"check_assign\"}",
+      "frame": "010000000000000001359199ba9ac9a7b97017971881580c57b790df887b8217b1cb0c9d54d266e20a0b7c47f06cdcca"
+    },
+    {
+      "dir": "be2fw",
+      "ver": 1,
+      "seq": 0,
+      "pt": "{\"type\":\"check_jobs\",\"jobs\":[]}",
+      "frame": "01000000000000000008943ccc7dffac27b2357e6297ee0cbf7311a57fafb0b5eb006d336eb1bf2b92f14777ca716b3368858d1332e8fdba"
+    },
+    {
+      "dir": "be2fw",
+      "ver": 2,
+      "seq": 1,
+      "pt_hex": "0007deadbeef",
+      "frame": "020000000000000001e7514c198d68afc479d5ff026ec30648529fedc351ba"
+    }
+  ],
+  "bad": [
+    {
+      "opis": "zmieniony bajt wersji (AAD)",
+      "dir": "fw2be",
+      "frame": "020000000000000000581e229f11848dbce7d8819139c9cc72f12bf8a92ac34615c46ca7bd82e83e2c6517601a41f586fea49a6b9447548ac403295acc34537d26"
+    },
+    {
+      "opis": "zmieniony bajt szyfrogramu",
+      "dir": "fw2be",
+      "frame": "010000000000000000581e229f11848dbce7d8819139c9cc72f12bf8a92ac34615c46ca7bd82e83e2c6517601a41f586fea49a6b9447548ac403295acc34537d00"
+    }
+  ]
+}

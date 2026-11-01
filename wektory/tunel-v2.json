@@ -1,0 +1,44 @@
+{
+  "spec": "protokol/tunel.md",
+  "pair_key": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+  "ts": 1761830000,
+  "session_key": "b3a4a59bc776e92af4071dae6a37cdd4e8f7e0975e29eb6fdbdf56bdc3816bea",
+  "frames": [
+    {
+      "dir": 0,
+      "opis": "nod → apka",
+      "seq": 0,
+      "nonce": "000102030405060708090a0b",
+      "pt": "SSH-2.0-dropbear\r\n",
+      "frame": "0000000000000000000102030405060708090a0bd71f1969c63d200687d3b1b38cc13fb4a2639a3f3d791dc69ea3063b7ec28d139fd5"
+    },
+    {
+      "dir": 0,
+      "opis": "nod → apka, dziura w seq dozwolona",
+      "seq": 5,
+      "nonce": "0c0d0e0f1011121314151617",
+      "pt": "HTTP/1.1 200 OK\r\n\r\n",
+      "frame": "00000000000000050c0d0e0f10111213141516178815a04792499c661dccef08c1884cd56d68e8b265c9491725aac12aaa4b101673ca58"
+    },
+    {
+      "dir": 1,
+      "opis": "apka → nod",
+      "seq": 0,
+      "nonce": "f0f1f2f3f4f5f6f7f8f9fafb",
+      "pt": "GET / HTTP/1.1\r\n\r\n",
+      "frame": "0000000000000000f0f1f2f3f4f5f6f7f8f9fafb0f5bc749bc24edf869359f4aaaf36eaac85c137fdbe78f008fe5763bba0423410004"
+    }
+  ],
+  "bad": [
+    {
+      "opis": "ramka nod → apka podana jako apka → nod (zły kierunek w AAD)",
+      "frame": "0000000000000000f0f1f2f3f4f5f6f7f8f9fafb0f5bc749bc24edf869359f4aaaf36eaac85c137fdbe78f008fe5763bba0423410004",
+      "open_as_dir": 0
+    },
+    {
+      "opis": "zmieniony seq (AAD)",
+      "frame": "00000000000000ff000102030405060708090a0bd71f1969c63d200687d3b1b38cc13fb4a2639a3f3d791dc69ea3063b7ec28d139fd5",
+      "open_as_dir": 0
+    }
+  ]
+}
