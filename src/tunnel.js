@@ -54,10 +54,10 @@ class Session {
         b.writeBigUInt64BE(seq, 9);
         return b;
     }
-    seal(plain, nonce = crypto.randomBytes(12)) {   // nod → apka; nonce tylko do testów na wektorach
+    seal(plain, nonce = crypto.randomBytes(12), dir = DIR_TO_APP) {   // nod → apka; nonce i dir tylko do testów
         const seq = this.seqTx++;
         const c = crypto.createCipheriv('aes-256-gcm', this.key, nonce);
-        c.setAAD(this.aad(DIR_TO_APP, seq));
+        c.setAAD(this.aad(dir, seq));
         const ct = Buffer.concat([c.update(plain), c.final()]);
         const s = Buffer.alloc(8); s.writeBigUInt64BE(seq);
         return Buffer.concat([s, nonce, ct, c.getAuthTag()]);
