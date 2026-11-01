@@ -18,7 +18,8 @@ const QUIET = new Set(['tasks_update', 'tasks_clear', 'config_ack', 'batch_ack',
 
 class Hub {
     constructor(cfg) {
-        this.cfg = { be: 'https://sensmos.com', port: 80, bePub: BE_PUB, pingS: 30, checkS: 600, backoffS: 5, ...cfg };
+        this.cfg = { be: 'https://sensmos.com', port: 80, bePub: BE_PUB, pingS: 30, checkS: 600, backoffS: 5,
+            ...Object.fromEntries(Object.entries(cfg).filter(([, v]) => v !== undefined && v !== '')) };
         this.cfg.be = this.cfg.be.replace(/\/$/, '');
         if (!/^0x[0-9a-fA-F]{40}$/.test(this.cfg.owner || '')) throw new Error('HUB_OWNER: podaj adres portfela z apki Sensmos (0x…)');
         this.log = cfg.log || ((...a) => console.log(new Date().toISOString().slice(11, 19), ...a));
@@ -88,7 +89,7 @@ class Hub {
     sendTun(tid, frame) { if (this.chan && this.ws?.readyState === WebSocket.OPEN) this.ws.send(this.chan.sealTun(tid, frame)); }
 
     connect() {
-        const hubNonce = crypto.randomBytes(16);
+        const hubNonce = this.hubNonce = crypto.randomBytes(16);
         this.chan = null;
         this.tunnels = new Tunnels({ pairing: this.pairing, deviceId: this.id.id, send: o => this.send(o), sendTun: (t, f) => this.sendTun(t, f), log: this.log });
         const ws = this.ws = new WebSocket(this.cfg.be.replace(/^http/, 'ws') + '/v1/ws');
@@ -102,10 +103,17 @@ class Hub {
                 chip: `hub ${os.platform()}-${os.arch()} node${process.versions.node}`,
             }));
         });
-        ws.on('message', (data, isBinary) => {
+        ws.on('message', (data, isBinary) => { try { this.onMessage(data, isBinary); } catch (e) { this.log('błąd obsługi wiadomości:', e.message); } });
+        ws.on('error', e => this.log('WS:', e.message));
+        ws.on('close', () => this.onClose());
+    }
+
+    onMessage(data, isBinary) {
+        const ws = this.ws;
+        {
             if (!isBinary) {
                 let m; try { m = JSON.parse(data.toString()); } catch { return; }
-                if (m.type === 'identified') return this.onIdentified(m, hubNonce);
+                if (m.type === 'identified') return this.onIdentified(m, this.hubNonce);
                 if (m.type === 'error') {
                     this.log('BE:', m.msg);
                     if (m.msg === 'device not registered') { try { fs.unlinkSync(this.registeredFile); } catch {} }
@@ -119,9 +127,11 @@ class Hub {
             if (r.ver === VER_TUN) { if (r.plaintext.length > 2) this.tunnels.onFrame(r.plaintext.readUInt16BE(0), r.plaintext.subarray(2)); return; }
             let m; try { m = JSON.parse(r.plaintext.toString('utf8')); } catch { return; }
             this.handle(m);
-        });
-        ws.on('error', e => this.log('WS:', e.message));
-        ws.on('close', () => {
+        }
+    }
+
+    onClose() {
+        {
             clearInterval(this.pingT); clearInterval(this.checkT);
             this.tunnels?.closeAll();
             this.chan = null;
@@ -130,7 +140,7 @@ class Hub {
             this.log(`rozłączony; ponowna próba za ${this.backoffS} s`);
             this.retryT = setTimeout(() => this.register().then(() => this.connect()).catch(e => { this.log(e.message); this.retryT = setTimeout(() => this.connect(), this.backoffS * 1000); }), this.backoffS * 1000);
             this.backoffS = Math.min(this.backoffS * 2, 120);
-        });
+        }
     }
 
     onIdentified(m, hubNonce) {
