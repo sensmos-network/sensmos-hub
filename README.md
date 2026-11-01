@@ -24,8 +24,9 @@ docker compose up -d
 docker compose logs -f      # shows the device_id and the PIN
 ```
 
-The container uses host networking: the app reaches the hub on `http://<host-ip>:8080` (pairing),
-the tunnel reaches your LAN, and `ping` measures the real home link.
+The container uses host networking: the app finds the hub by mDNS (`sensmos-<id>.local`) and talks to it on
+port 80 like to an ESP32 node, the tunnel reaches your LAN, and `ping` measures the real home link. Port 80
+must be free on the host.
 
 After the first start the hub appears in the app on the node list of that wallet.
 

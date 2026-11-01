@@ -86,7 +86,7 @@ test('E2E: rejestracja, kanał, measure, parowanie, tunel', async () => {
     const lanPort = lanSrv.address().port;
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-e2e-'));
     const logs = [];
-    const hub = new Hub({ be: be.url, owner: OWNER, data: dir, port: 0, bePub: V.be_pub, pin: '123456', pingS: 3600, checkS: 3600, backoffS: 0.2, log: (...a) => logs.push(a.join(' ')) });
+    const hub = new Hub({ be: be.url, owner: OWNER, data: dir, port: 0, bePub: V.be_pub, pin: '123456', pingS: 3600, checkS: 3600, backoffS: 0.2, mdns: false, log: (...a) => logs.push(a.join(' ')) });
     try {
         await hub.start();
         assert.ok(fs.existsSync(path.join(dir, 'registered.json')), 'rejestracja zapisana');

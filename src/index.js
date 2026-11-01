@@ -8,7 +8,7 @@ try {
         be: process.env.HUB_BE || 'https://sensmos.com',
         owner: (process.env.HUB_OWNER || '').trim(),
         data: process.env.HUB_DATA || path.join(__dirname, '..', 'data'),
-        port: parseInt(process.env.HUB_PORT) || 8080,
+        port: parseInt(process.env.HUB_PORT) || 80,
         bePub: process.env.HUB_BE_PUB || undefined,
         pin: process.env.HUB_PIN || '',
     });

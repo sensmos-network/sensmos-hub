@@ -8,8 +8,8 @@ Assistant (and other devices on your LAN) without port forwarding or VPN.
 
 - **owner**: the wallet address from the Sensmos app (Wallet screen), `0x…`.
 - **pin**: six digits the app asks for when pairing. Leave empty for a random PIN (see the add-on log).
-- **port**: LAN port the app talks to when pairing (default 8080). The add-on uses host networking,
-  so the port must be free on this machine.
+- **port**: LAN port the app talks to when pairing (default 80, like an ESP32 node). The add-on uses host
+  networking, so the port must be free on this machine.
 
 ## After the first start
 

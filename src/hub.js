@@ -10,6 +10,7 @@ const { Channel, VER_TUN } = require('./wsenc');
 const measure = require('./measure');
 const { Pairing, Tunnels } = require('./tunnel');
 const lan = require('./lan');
+const mdns = require('./mdns');
 const BE_PUB = require('./be_pub');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
@@ -17,7 +18,7 @@ const QUIET = new Set(['tasks_update', 'tasks_clear', 'config_ack', 'batch_ack',
 
 class Hub {
     constructor(cfg) {
-        this.cfg = { be: 'https://sensmos.com', port: 8080, bePub: BE_PUB, pingS: 30, checkS: 600, backoffS: 5, ...cfg };
+        this.cfg = { be: 'https://sensmos.com', port: 80, bePub: BE_PUB, pingS: 30, checkS: 600, backoffS: 5, ...cfg };
         this.cfg.be = this.cfg.be.replace(/\/$/, '');
         if (!/^0x[0-9a-fA-F]{40}$/.test(this.cfg.owner || '')) throw new Error('HUB_OWNER: podaj adres portfela z apki Sensmos (0x…)');
         this.log = cfg.log || ((...a) => console.log(new Date().toISOString().slice(11, 19), ...a));
@@ -49,6 +50,8 @@ class Hub {
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE,
             log: this.log, onPairingChange: () => this.ws?.close() });
         await new Promise(r => this.lan.once('listening', r));
+        // apka szuka noda po nazwie sensmos-<id>.local i mówi do portu 80 (jak do płytki)
+        if (this.cfg.mdns !== false) this.mdns = mdns.start({ deviceId: this.id.id, port: this.lan.address().port, firmware: FIRMWARE, log: this.log });
         try { await this.register(); } catch (e) { this.log(e.message); }
         this.connect();
         return this;
@@ -60,6 +63,7 @@ class Hub {
         this.tunnels?.closeAll();
         this.ws?.close();
         this.lan?.close();
+        this.mdns?.stop();
     }
 
     async register() {
