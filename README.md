@@ -49,7 +49,7 @@ The same hub as an add-on, for people who run Home Assistant OS or Supervised:
 2. Install **Sensmos Hub**, fill in **owner** (wallet address) and optionally **pin**, start it.
 3. Pair from the app as above; the HA panel integration then points at this machine, port 8123.
 
-The add-on uses the published Docker image (`addon/sensmos_hub/`), with host networking.
+Home Assistant builds the add-on image itself from this repository (`addon/sensmos_hub/`), with host networking.
 
 ## Files in `data/`
 

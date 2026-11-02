@@ -1,7 +1,8 @@
 services:
   hub:
     build: .
-    image: ghcr.io/sensmos-network/sensmos-hub:0.1
+    image: sensmos-hub:0.1
+    pull_policy: build
     container_name: sensmos-hub
     # host networking: the phone finds the hub by mDNS and pairs over LAN (port 80, like an ESP32 node), the tunnel reaches LAN devices,
     # and `ping` measures the real home link, not Docker's bridge.

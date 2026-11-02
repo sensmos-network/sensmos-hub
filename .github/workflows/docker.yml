@@ -1,4 +1,5 @@
 name: docker
+# Obraz w GHCR jest prywatny (organizacja nie pozwala na publiczne pakiety); compose i add-on HA budują lokalnie.
 
 on:
   push:
