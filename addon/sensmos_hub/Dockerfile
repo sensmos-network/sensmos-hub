@@ -2,7 +2,7 @@
 # zamiast polegać na obrazie z GHCR (pakiety organizacji nie mogą być publiczne).
 ARG BUILD_FROM=node:22-alpine
 FROM ${BUILD_FROM}
-ARG HUB_VERSION=v0.1.0
+ARG HUB_VERSION=v0.1.1
 RUN apk add --no-cache iputils iproute2 \
  && wget -qO /tmp/hub.tar.gz "https://github.com/sensmos-network/sensmos-hub/archive/refs/tags/${HUB_VERSION}.tar.gz" \
  && mkdir -p /app && tar xzf /tmp/hub.tar.gz -C /app --strip-components=1 && rm /tmp/hub.tar.gz

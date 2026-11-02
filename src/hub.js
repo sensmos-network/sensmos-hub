@@ -12,6 +12,7 @@ const { Pairing, Tunnels } = require('./tunnel');
 const lan = require('./lan');
 const mdns = require('./mdns');
 const BE_PUB = require('./be_pub');
+const diag = require('./diag');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
 const QUIET = new Set(['cn_config', 'tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong']);
@@ -22,8 +23,12 @@ class Hub {
             ...Object.fromEntries(Object.entries(cfg).filter(([, v]) => v !== undefined && v !== '')) };
         this.cfg.be = this.cfg.be.replace(/\/$/, '');
         if (!/^0x[0-9a-fA-F]{40}$/.test(this.cfg.owner || '')) throw new Error('HUB_OWNER: podaj adres portfela z apki Sensmos (0x…)');
-        this.log = cfg.log || ((...a) => console.log(new Date().toISOString().slice(11, 19), ...a));
         fs.mkdirSync(this.cfg.data, { recursive: true });
+        // Każda linia logu trafia też do bufora zdarzeń na dysku (paczka diagnostyczna, `diag`).
+        this.debug = this.cfg.debug === true || /^(debug|1|true)$/i.test(process.env.SENSMOS_LOG || '');
+        this.events = new diag.Events(this.cfg.data);
+        const out = cfg.log || ((...a) => console.log(new Date().toISOString().slice(11, 19), ...a));
+        this.log = (...a) => { this.events.push(a.join(' ')); out(...a); };
         this.id = identity.load(this.cfg.data);
         this.pairing = new Pairing(this.cfg.data);
         this.pin = this.loadPin();
@@ -46,6 +51,7 @@ class Hub {
     }
 
     async start() {
+        diag.writeState(this.cfg.data, { version: FIRMWARE });
         this.log(`Sensmos Hub ${FIRMWARE} — device_id ${this.id.id}`);
         this.log(`PIN hubu: ${this.pin} (apka pyta o niego przy parowaniu i eksporcie)`);
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE,
@@ -65,6 +71,7 @@ class Hub {
         this.ws?.close();
         this.lan?.close();
         this.mdns?.stop();
+        this.events.stop();
     }
 
     async register() {
@@ -169,6 +176,7 @@ class Hub {
 
     handle(m) {
         this.emit('message', m);
+        if (this.debug && m.type !== 'check_jobs') this.log('BE →', m.type);
         switch (m.type) {
             case 'check_jobs':
                 measure.run(m.jobs).then(recs => { if (recs.length) { this.send({ type: 'measure', v: 1, m: recs }); this.log(`measure: ${recs.length} rekordów`); } });
@@ -180,9 +188,10 @@ class Hub {
             case 'ota': this.log('OTA nie dotyczy hubu (aktualizacja = nowy obraz Dockera)'); return;
             case 'message': this.log('wiadomość:', JSON.stringify(m).slice(0, 200)); return;
             default:
-                if (!QUIET.has(m.type) && !this.seen.has(m.type)) { this.seen.add(m.type); this.log('nieobsługiwany typ z BE:', m.type); }
+                if (this.debug) this.log('BE →', m.type, JSON.stringify(m).slice(0, 300));
+                else if (!QUIET.has(m.type) && !this.seen.has(m.type)) { this.seen.add(m.type); this.log('nieobsługiwany typ z BE:', m.type); }
         }
     }
 }
 
-module.exports = { Hub, FIRMWARE };
+module.exports = { Hub, FIRMWARE, diag };

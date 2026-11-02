@@ -51,6 +51,20 @@ The same hub as an add-on, for people who run Home Assistant OS or Supervised:
 
 Home Assistant builds the add-on image itself from this repository (`addon/sensmos_hub/`), with host networking.
 
+## Diagnostics and the testers programme
+
+The hub keeps its last 500 log lines in `data/events.json`. One command builds a diagnostic package
+(version, device, config without secrets, events, errors, metrics) and, with `--upload`, sends it to
+the backend signed with the hub's own key, so it counts for the testers programme:
+
+```sh
+docker compose exec hub node src/index.js diag                      # print the package
+docker compose exec hub node src/index.js diag --upload             # send it
+docker compose exec hub node src/index.js diag --upload --scenario hub-install --result ok --note "worked"
+```
+
+`SENSMOS_LOG=debug` in `.env` logs every message from the backend (tester mode).
+
 ## Files in `data/`
 
 | file | what |
@@ -59,6 +73,7 @@ Home Assistant builds the add-on image itself from this repository (`addon/sensm
 | `pairing.json` | pairing keys written by phones (up to 4) |
 | `pin.txt` | the PIN, when `HUB_PIN` is empty |
 | `registered.json` | marker that the hub registered with the backend for this wallet |
+| `events.json`, `state.json` | last 500 log lines and process state, read by `diag` |
 
 ## What works in 0.1 and what does not
 
