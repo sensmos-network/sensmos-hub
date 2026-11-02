@@ -1,0 +1,92 @@
+{
+  "$comment": "Scenariusze programu testerów Sensmos. BE pobiera ten plik co godzinę (sensmos.com/test). Punkty: 1 mały, 3 średni, 10 duży. auto_check: patrz backend/src/services/testers.js.",
+  "scenarios": [
+    {
+      "id": "hub-010-install",
+      "component": "hub",
+      "min_version": "hub-0.1.1",
+      "hardware": { "hub": true },
+      "points": 1,
+      "limit_testers": 20,
+      "title": { "en": "Install Sensmos Hub 0.1 with Docker", "pl": "Zainstaluj Sensmos Hub 0.1 w Dockerze", "de": "Sensmos Hub 0.1 mit Docker installieren", "pt": "Instalar o Sensmos Hub 0.1 com Docker" },
+      "steps": {
+        "en": ["Clone github.com/sensmos-network/sensmos-hub and put your wallet address in .env (HUB_OWNER).", "Run `docker compose up -d` and wait until the log says it is connected to sensmos.com.", "Check that the hub appears on your node list in the app.", "Send the package: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-install --result ok`."],
+        "pl": ["Sklonuj github.com/sensmos-network/sensmos-hub i wpisz adres portfela w .env (HUB_OWNER).", "Uruchom `docker compose up -d` i poczekaj, aż log pokaże połączenie z sensmos.com.", "Sprawdź, że hub pojawił się na liście nodów w apce.", "Wyślij paczkę: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-install --result ok`."],
+        "de": ["Klone github.com/sensmos-network/sensmos-hub und trage deine Wallet-Adresse in .env ein (HUB_OWNER).", "Starte `docker compose up -d` und warte, bis das Log die Verbindung zu sensmos.com meldet.", "Prüfe, dass der Hub in der App in deiner Node-Liste erscheint.", "Sende das Paket: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-install --result ok`."],
+        "pt": ["Clone github.com/sensmos-network/sensmos-hub e coloque o endereço da carteira em .env (HUB_OWNER).", "Rode `docker compose up -d` e espere o log mostrar a conexão com sensmos.com.", "Confira que o hub aparece na sua lista de nodes no app.", "Envie o pacote: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-install --result ok`."]
+      },
+      "expected": { "en": "The hub is on your node list and the package arrives with the connection event.", "pl": "Hub jest na liście nodów, a paczka dociera ze zdarzeniem połączenia.", "de": "Der Hub steht in deiner Node-Liste und das Paket kommt mit dem Verbindungsereignis an.", "pt": "O hub está na lista de nodes e o pacote chega com o evento de conexão." },
+      "auto_check": { "component": "hub", "package": true, "version_prefix": "hub-0.1", "events_any": ["połączony z"] }
+    },
+    {
+      "id": "hub-010-addon",
+      "component": "hub",
+      "min_version": "hub-0.1.1",
+      "hardware": { "hub": true, "ha": true },
+      "points": 3,
+      "limit_testers": 20,
+      "title": { "en": "Sensmos Hub as a Home Assistant add-on", "pl": "Sensmos Hub jako dodatek Home Assistant", "de": "Sensmos Hub als Home-Assistant-Add-on", "pt": "Sensmos Hub como add-on do Home Assistant" },
+      "steps": {
+        "en": ["In Home Assistant add the repository github.com/sensmos-network/sensmos-hub in the add-on store.", "Install Sensmos Hub, enter your wallet address as owner, start it.", "Check the add-on log for the connection line and the PIN.", "From the add-on terminal (or Settings → System → Terminal) run `node /app/src/index.js diag --upload --scenario hub-010-addon --result ok`."],
+        "pl": ["W Home Assistant dodaj repozytorium github.com/sensmos-network/sensmos-hub w sklepie z dodatkami.", "Zainstaluj Sensmos Hub, wpisz adres portfela jako owner, uruchom.", "Sprawdź w logu dodatku linię o połączeniu i PIN.", "Z terminala dodatku uruchom `node /app/src/index.js diag --upload --scenario hub-010-addon --result ok`."],
+        "de": ["Füge in Home Assistant das Repository github.com/sensmos-network/sensmos-hub im Add-on-Store hinzu.", "Installiere Sensmos Hub, trage deine Wallet-Adresse als owner ein, starte es.", "Prüfe im Add-on-Log die Verbindungszeile und die PIN.", "Führe im Add-on-Terminal `node /app/src/index.js diag --upload --scenario hub-010-addon --result ok` aus."],
+        "pt": ["No Home Assistant adicione o repositório github.com/sensmos-network/sensmos-hub na loja de add-ons.", "Instale o Sensmos Hub, informe o endereço da carteira como owner, inicie.", "Confira no log do add-on a linha de conexão e o PIN.", "No terminal do add-on rode `node /app/src/index.js diag --upload --scenario hub-010-addon --result ok`."]
+      },
+      "expected": { "en": "The add-on builds, connects and the package arrives.", "pl": "Dodatek się buduje, łączy i paczka dociera.", "de": "Das Add-on baut, verbindet sich und das Paket kommt an.", "pt": "O add-on compila, conecta e o pacote chega." },
+      "auto_check": { "component": "hub", "package": true, "version_prefix": "hub-0.1", "events_any": ["połączony z"] }
+    },
+    {
+      "id": "hub-010-tunnel",
+      "component": "hub",
+      "min_version": "hub-0.1.1",
+      "hardware": { "hub": true, "ha": true },
+      "points": 3,
+      "limit_testers": 20,
+      "title": { "en": "Pair the hub and open the Home Assistant panel through it", "pl": "Sparuj hub i otwórz przez niego panel Home Assistant", "de": "Hub koppeln und das Home-Assistant-Panel darüber öffnen", "pt": "Parear o hub e abrir o painel do Home Assistant por ele" },
+      "steps": {
+        "en": ["With the phone on the same Wi-Fi open the hub in the app → Settings → Remote access → Pair, enter the PIN from the log.", "Add the HA panel integration on the node card with your Home Assistant LAN address, e.g. 192.168.1.20:8123.", "Switch the phone to mobile data and open the panel.", "Send the package: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-tunnel --result ok` (or fail with a note)."],
+        "pl": ["Z telefonem w tej samej sieci Wi-Fi otwórz hub w apce → Ustawienia → Zdalny dostęp → Sparuj, podaj PIN z logu.", "Dodaj integrację Panel HA na karcie noda z adresem Home Assistant w LAN, np. 192.168.1.20:8123.", "Przełącz telefon na dane komórkowe i otwórz panel.", "Wyślij paczkę: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-tunnel --result ok` (albo fail z notatką)."],
+        "de": ["Öffne mit dem Handy im selben WLAN den Hub in der App → Einstellungen → Fernzugriff → Koppeln, gib die PIN aus dem Log ein.", "Füge auf der Node-Karte die HA-Panel-Integration mit der LAN-Adresse von Home Assistant hinzu, z. B. 192.168.1.20:8123.", "Schalte das Handy auf Mobilfunk und öffne das Panel.", "Sende das Paket: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-tunnel --result ok` (oder fail mit Notiz)."],
+        "pt": ["Com o celular no mesmo Wi-Fi abra o hub no app → Configurações → Acesso remoto → Parear, digite o PIN do log.", "Adicione a integração Painel HA no cartão do node com o endereço local do Home Assistant, ex. 192.168.1.20:8123.", "Mude o celular para dados móveis e abra o painel.", "Envie o pacote: `docker compose exec hub node src/index.js diag --upload --scenario hub-010-tunnel --result ok` (ou fail com nota)."]
+      },
+      "expected": { "en": "The HA panel opens over mobile data; the package shows the tunnel open event.", "pl": "Panel HA otwiera się przez dane komórkowe; paczka zawiera zdarzenie otwarcia tunelu.", "de": "Das HA-Panel öffnet sich über Mobilfunk; das Paket enthält das Tunnel-Ereignis.", "pt": "O painel do HA abre pelos dados móveis; o pacote mostra o evento do túnel." },
+      "auto_check": { "component": "hub", "package": true, "version_prefix": "hub-0.1", "events_any": ["tun open tid="] }
+    },
+    {
+      "id": "fw-110-ota",
+      "component": "fw",
+      "min_version": "1.10",
+      "hardware": { "esp32": true },
+      "points": 10,
+      "limit_testers": 10,
+      "ends_at": "2026-11-30T23:59:59Z",
+      "title": { "en": "Firmware 1.10 on your ESP32 node (OTA)", "pl": "Firmware 1.10 na Twoim nodzie ESP32 (OTA)", "de": "Firmware 1.10 auf deinem ESP32-Node (OTA)", "pt": "Firmware 1.10 no seu node ESP32 (OTA)" },
+      "steps": {
+        "en": ["Pick one ESP32 node that is online and not critical for you (it may revert on its own within 5 minutes if 1.10 fails).", "Start this scenario in the app or on sensmos.com/test and choose that node: the server queues the 1.10 update for it.", "Wait up to 10 minutes. The node reboots and reports firmware 1.10 (node card in the app).", "Tap Works when it reports 1.10 and stays online for 10 minutes; tap Does not work if it came back on 1.01 or stayed silent."],
+        "pl": ["Wybierz jeden nod ESP32, który jest online i nie jest dla Ciebie krytyczny (jeśli 1.10 nie wstanie, sam cofnie się w 5 minut).", "Rozpocznij ten scenariusz w apce albo na sensmos.com/test i wskaż ten nod: serwer zakolejkuje dla niego aktualizację 1.10.", "Poczekaj do 10 minut. Nod restartuje się i zgłasza firmware 1.10 (karta noda w apce).", "Kliknij Działa, gdy zgłasza 1.10 i jest online 10 minut; Nie działa, jeśli wrócił na 1.01 albo zamilkł."],
+        "de": ["Wähle einen ESP32-Node, der online und für dich nicht kritisch ist (wenn 1.10 nicht startet, kehrt er in 5 Minuten selbst zurück).", "Starte dieses Szenario in der App oder auf sensmos.com/test und wähle diesen Node: Der Server stellt das 1.10-Update für ihn in die Warteschlange.", "Warte bis zu 10 Minuten. Der Node startet neu und meldet Firmware 1.10 (Node-Karte in der App).", "Tippe Funktioniert, wenn er 1.10 meldet und 10 Minuten online bleibt; Funktioniert nicht, wenn er auf 1.01 zurückkam oder still blieb."],
+        "pt": ["Escolha um node ESP32 que esteja online e não seja crítico (se o 1.10 falhar, ele volta sozinho em 5 minutos).", "Inicie este cenário no app ou em sensmos.com/test e escolha esse node: o servidor enfileira a atualização 1.10 para ele.", "Espere até 10 minutos. O node reinicia e reporta firmware 1.10 (cartão do node no app).", "Toque em Funciona quando ele reportar 1.10 e ficar online por 10 minutos; Não funciona se voltou para 1.01 ou ficou em silêncio."]
+      },
+      "expected": { "en": "The node reports firmware 1.10 and keeps pinging.", "pl": "Nod zgłasza firmware 1.10 i dalej pinguje.", "de": "Der Node meldet Firmware 1.10 und pingt weiter.", "pt": "O node reporta firmware 1.10 e continua pingando." },
+      "auto_check": { "component": "fw", "version_prefix": "1.10", "device_online": true, "ota_version": "1.10" }
+    },
+    {
+      "id": "fw-110-lora-ota",
+      "component": "fw",
+      "min_version": "1.10-lora2",
+      "hardware": { "esp32": true, "lora": true },
+      "points": 10,
+      "limit_testers": 10,
+      "ends_at": "2026-11-30T23:59:59Z",
+      "title": { "en": "Firmware 1.10 on a LoRa node (OTA) and a LoRa frame after the update", "pl": "Firmware 1.10 na nodzie z LoRa (OTA) i ramka LoRa po aktualizacji", "de": "Firmware 1.10 auf einem LoRa-Node (OTA) und ein LoRa-Frame nach dem Update", "pt": "Firmware 1.10 em um node LoRa (OTA) e um quadro LoRa após a atualização" },
+      "steps": {
+        "en": ["Pick an online ESP32-S3 node with a LoRa radio (Heltec V3, LilyGO T3, Wio). Start the scenario and choose it: the server queues 1.10-lora2.", "Wait up to 10 minutes until the node reports 1.10-lora2.", "Send a message from the messenger or wait for a neighbour beacon: the node card should show LoRa activity after the update.", "Tap Works if it reports 1.10-lora2 and LoRa still works; Does not work otherwise, with a note."],
+        "pl": ["Wybierz nod ESP32-S3 z radiem LoRa (Heltec V3, LilyGO T3, Wio), który jest online. Rozpocznij scenariusz i wskaż go: serwer zakolejkuje 1.10-lora2.", "Poczekaj do 10 minut, aż nod zgłosi 1.10-lora2.", "Wyślij wiadomość z komunikatora albo poczekaj na beacon sąsiada: karta noda powinna pokazać aktywność LoRa po aktualizacji.", "Kliknij Działa, jeśli zgłasza 1.10-lora2 i LoRa działa; w innym razie Nie działa z notatką."],
+        "de": ["Wähle einen ESP32-S3-Node mit LoRa-Funk (Heltec V3, LilyGO T3, Wio), der online ist. Starte das Szenario und wähle ihn: Der Server stellt 1.10-lora2 in die Warteschlange.", "Warte bis zu 10 Minuten, bis der Node 1.10-lora2 meldet.", "Sende eine Nachricht aus dem Messenger oder warte auf einen Nachbar-Beacon: Die Node-Karte sollte nach dem Update LoRa-Aktivität zeigen.", "Tippe Funktioniert, wenn er 1.10-lora2 meldet und LoRa weiter läuft; sonst Funktioniert nicht mit Notiz."],
+        "pt": ["Escolha um node ESP32-S3 com rádio LoRa (Heltec V3, LilyGO T3, Wio) que esteja online. Inicie o cenário e escolha-o: o servidor enfileira 1.10-lora2.", "Espere até 10 minutos até o node reportar 1.10-lora2.", "Envie uma mensagem pelo mensageiro ou espere um beacon de vizinho: o cartão do node deve mostrar atividade LoRa após a atualização.", "Toque em Funciona se ele reportar 1.10-lora2 e o LoRa continuar; caso contrário Não funciona com nota."]
+      },
+      "expected": { "en": "The node reports 1.10-lora2 and LoRa activity continues.", "pl": "Nod zgłasza 1.10-lora2, a aktywność LoRa trwa.", "de": "Der Node meldet 1.10-lora2 und die LoRa-Aktivität läuft weiter.", "pt": "O node reporta 1.10-lora2 e a atividade LoRa continua." },
+      "auto_check": { "component": "fw", "version_prefix": "1.10-lora", "device_online": true, "lora": true, "ota_version": "1.10-lora2" }
+    }
+  ]
+}
