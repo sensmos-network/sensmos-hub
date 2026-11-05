@@ -51,6 +51,21 @@ The same hub as an add-on, for people who run Home Assistant OS or Supervised:
 
 Home Assistant builds the add-on image itself from this repository (`addon/sensmos_hub/`), with host networking.
 
+## Test builds (beta)
+
+Testers get new hub versions first. A test build is a tag like `v0.1.2-beta1`; the stable add-on and
+the `main` instructions above move to it only after testers have checked it.
+
+- **Home Assistant:** in the same repository install **Sensmos Hub (beta)** instead of **Sensmos Hub**.
+  It is a separate node with its own device id, so pair it again; stop the stable add-on first (both use port 80).
+- **Docker Compose:** check out the test tag and rebuild. The `data/` folder stays, so the node keeps its identity.
+
+```sh
+git fetch --tags
+git checkout v0.1.2-beta1        # the newest -beta tag; back to stable: git checkout main
+docker compose up -d --build
+```
+
 ## Diagnostics and the testers programme
 
 The hub keeps its last 500 log lines in `data/events.json`. One command builds a diagnostic package
