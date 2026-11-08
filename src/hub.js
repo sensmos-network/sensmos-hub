@@ -13,6 +13,7 @@ const lan = require('./lan');
 const mdns = require('./mdns');
 const BE_PUB = require('./be_pub');
 const diag = require('./diag');
+const ha = require('./ha');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
 const QUIET = new Set(['cn_config', 'tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong']);
@@ -55,10 +56,15 @@ class Hub {
         this.log(`Sensmos Hub ${FIRMWARE} — device_id ${this.id.id}`);
         this.log(`PIN hubu: ${this.pin} (apka pyta o niego przy parowaniu i eksporcie)`);
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: this.cfg.owner,
+            sensors: () => this.ha?.snapshot() || null,
             log: this.log, onPairingChange: () => this.ws?.close() });
         await new Promise(r => this.lan.once('listening', r));
         // apka szuka noda po nazwie sensmos-<id>.local i mówi do portu 80 (jak do płytki)
         if (this.cfg.mdns !== false) this.mdns = mdns.start({ deviceId: this.id.id, port: this.lan.address().port, firmware: FIRMWARE, log: this.log });
+        // Czujniki z Home Assistanta (tylko odczyt, lokalnie): add-on → API Supervisora, Docker → HUB_HA_URL + HUB_HA_TOKEN.
+        const haCfg = this.cfg.ha || ha.config();
+        if (haCfg) this.ha = new ha.HaSensors({ cfg: haCfg, log: this.log, everyS: this.cfg.haEveryS || 60 }).start();
+        else this.log('HA: brak dostępu do Home Assistanta (Docker: HUB_HA_URL + HUB_HA_TOKEN w .env) — czujniki wyłączone');
         try { await this.register(); } catch (e) { this.log(e.message); }
         this.connect();
         return this;
@@ -70,6 +76,7 @@ class Hub {
         this.tunnels?.closeAll();
         this.ws?.close();
         this.lan?.close();
+        this.ha?.stop();
         this.mdns?.stop();
         this.events.stop();
     }

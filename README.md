@@ -97,6 +97,19 @@ docker compose exec hub node src/index.js diag --upload --scenario hub-install -
 | `registered.json` | marker that the hub registered with the backend for this wallet |
 | `events.json`, `state.json` | last 500 log lines and process state, read by `diag` |
 
+## Home Assistant sensors (from 0.1.2-beta2)
+
+The hub reads the sensors Home Assistant already knows (ESPHome, Zigbee, MQTT, anything with a numeric
+state or on/off), read-only and over your LAN. Nothing is sent to the Sensmos network: choosing which
+sensors to share is the next step.
+
+- **Add-on:** works on its own through Home Assistant's built-in API.
+- **Docker:** set `HUB_HA_URL` (for example `http://192.168.1.10:8123`) and `HUB_HA_TOKEN` (a long-lived
+  access token from your HA profile) in `.env`.
+
+The log shows what the hub sees (`HA (add-on): 12 sensors: …`), and the app can read the same list from
+the hub with its PIN (`GET /sensors`).
+
 ## What works in 0.1 and what does not
 
 Works: registration, encrypted channel, heartbeat, link measurements (icmp via `ping`, tcp, http, dns),

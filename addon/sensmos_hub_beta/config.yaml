@@ -1,5 +1,5 @@
 name: Sensmos Hub (beta)
-version: "0.1.2-beta1"
+version: "0.1.2-beta2"
 slug: sensmos_hub_beta
 description: Test builds of Sensmos Hub for the testers programme. Gets new hub versions before the stable add-on. Runs as a separate node: stop the stable add-on first.
 url: https://github.com/sensmos-network/sensmos-hub
@@ -10,6 +10,8 @@ arch:
 startup: services
 boot: auto
 host_network: true
+# czujniki z HA (tylko odczyt stanów, src/ha.js) przez API Supervisora
+homeassistant_api: true
 init: false
 options:
   owner: ""

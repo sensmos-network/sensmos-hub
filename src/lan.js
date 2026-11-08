@@ -4,7 +4,7 @@ const http = require('http');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
-function start({ port, pin, identity, pairing, firmware, owner, log, onPairingChange }) {
+function start({ port, pin, identity, pairing, firmware, owner, sensors, log, onPairingChange }) {
     let fails = 0, lockUntil = 0;
     const json = (res, code, obj) => {
         res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -53,6 +53,12 @@ function start({ port, pin, identity, pairing, firmware, owner, log, onPairingCh
                 log(`sparowano telefon (kluczy: ${pairing.count()})`);
                 return json(res, 200, { status: 'ok', keys: pairing.count() });
             }
+        }
+        // Czujniki widziane w Home Assistancie (podgląd dla apki; nic z tego nie wychodzi do sieci bez wyboru właściciela).
+        if (url === '/sensors' && req.method === 'GET') {
+            if (!checkPin(req, res)) return;
+            const s = sensors?.();
+            return json(res, 200, s || { via: null, error: 'no Home Assistant access', count: 0, sensors: [] });
         }
         // Ceremonia LAN (nagrody Huba, BE /v1/attest/hub): apka w tej samej sieci przynosi seed z BE i pozycję
         // telefonu, Hub podpisuje kanoniczny atest SWOIM device_id i SWOIM właścicielem — nie jest wyrocznią
