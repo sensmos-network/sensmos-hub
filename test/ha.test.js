@@ -101,3 +101,41 @@ test('wybór do udostępnienia: domyślnie żaden, zapis na dysku, tylko poprawn
         assert.deepStrictEqual(new ha.Shared(dir).list(), ['sensor.a'], 'wybór przeżywa restart');
     } finally { server.close(); }
 });
+
+test('historia lokalna: dopisywanie, zapytanie po encji i godzinach, przycinanie po 7 dniach', () => {
+    const { History } = require('../src/history');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-'));
+    const h = new History(dir, { keepS: 7 * 86400, pruneEvery: 1000 });
+    const now = 2_000_000_000;
+    h.append([{ entity_id: 'pub.temp_in', value: 20, unit: '°C' }], now - 8 * 86400);
+    h.append([{ entity_id: 'pub.temp_in', value: 21, unit: '°C' }, { entity_id: 'pub.door', value: 1 }], now - 3600);
+    h.append([{ entity_id: 'pub.temp_in', value: 22, unit: '°C' }], now);
+    assert.deepStrictEqual(h.query({ entity: 'pub.temp_in', hours: 24, now }).map(r => r.v), [21, 22]);
+    assert.strictEqual(h.query({ hours: 24, now }).length, 3);
+    assert.strictEqual(h.prune(now), 3, 'odczyt sprzed 8 dni wylatuje');
+    assert.strictEqual(new History(dir).rows().length, 3, 'przeżywa restart');
+});
+
+test('LAN /data/status, /data/native, /data/history w formacie płytki, tylko z PIN-em', async () => {
+    const { History } = require('../src/history');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-'));
+    const history = new History(dir);
+    history.append([{ entity_id: 'pub.temp_in', value: 21.4, unit: '°C' }]);
+    const view = { status: { device_id: 'ab'.repeat(32), buffer_count: 1, uptime_s: 5, pub: [{ entity_id: 'pub.temp_in', value: '21.4', unit: '°C', age_s: 3 }], mon: [], own: [], pool: [] },
+                   native: { count: 1, entities: [{ entity_id: 'temp_in', pub_id: 'pub.temp_in', value: '21.4', unit: '°C', age_s: 3 }] } };
+    const server = lan.start({ port: 0, pin: '123456', identity: { id: 'ab'.repeat(32), pubHex: '04' }, pairing: new Pairing(dir), firmware: 'hub-test',
+        data: () => view, history, log: () => {} });
+    await new Promise(r => server.once('listening', r));
+    const base = `http://127.0.0.1:${server.address().port}`, H = { Authorization: 'Bearer 123456' };
+    try {
+        assert.strictEqual((await fetch(base + '/data/status')).status, 403);
+        const st = await (await fetch(base + '/data/status', { headers: H })).json();
+        assert.deepStrictEqual(Object.keys(st), ['device_id', 'buffer_count', 'uptime_s', 'pub', 'mon', 'own', 'pool']);
+        assert.strictEqual(st.pub[0].value, '21.4');
+        const nat = await (await fetch(base + '/data/native', { headers: H })).json();
+        assert.strictEqual(nat.entities[0].pub_id, 'pub.temp_in');
+        const hist = await (await fetch(base + '/data/history?entity=pub.temp_in&hours=1', { headers: H })).json();
+        assert.strictEqual(hist.count, 1);
+        assert.strictEqual(hist.rows[0].v, 21.4);
+    } finally { server.close(); }
+});

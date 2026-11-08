@@ -14,6 +14,7 @@ const mdns = require('./mdns');
 const BE_PUB = require('./be_pub');
 const diag = require('./diag');
 const ha = require('./ha');
+const { History } = require('./history');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
 const QUIET = new Set(['cn_config', 'tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong']);
@@ -57,6 +58,7 @@ class Hub {
         this.log(`PIN hubu: ${this.pin} (apka pyta o niego przy parowaniu i eksporcie)`);
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: this.cfg.owner,
             sensors: () => this.ha?.snapshot() || null, shared: this.shared = new ha.Shared(this.cfg.data),
+            data: () => this.dataView(), history: this.history = new History(this.cfg.data),
             log: this.log, onPairingChange: () => this.ws?.close() });
         await new Promise(r => this.lan.once('listening', r));
         // apka szuka noda po nazwie sensmos-<id>.local i mówi do portu 80 (jak do płytki)
@@ -65,6 +67,9 @@ class Hub {
         const haCfg = this.cfg.ha || ha.config();
         if (haCfg) this.ha = new ha.HaSensors({ cfg: haCfg, log: this.log, everyS: this.cfg.haEveryS || 60 }).start();
         else this.log('HA: brak dostępu do Home Assistanta (Docker: HUB_HA_URL + HUB_HA_TOKEN w .env) — czujniki wyłączone');
+        // Udostępnione czujniki co dataS: zapis do historii lokalnej zawsze, wysyłka do sieci gdy jest połączenie
+        // (ten sam batch co ESP32, kanał szyfrowany, BE: onBatch → batch.js).
+        this.dataT = setInterval(() => this.sendSensors(), (this.cfg.dataS || 300) * 1000);
         try { await this.register(); } catch (e) { this.log(e.message); }
         this.connect();
         return this;
@@ -147,7 +152,7 @@ class Hub {
 
     onClose() {
         {
-            clearInterval(this.pingT); clearInterval(this.checkT); clearInterval(this.dataT);
+            clearInterval(this.pingT); clearInterval(this.checkT);
             this.tunnels?.closeAll();
             this.chan = null;
             this.emit('disconnected');
@@ -174,20 +179,33 @@ class Hub {
         this.pingT = setInterval(() => this.ping(), this.cfg.pingS * 1000);
         this.send({ type: 'check_assign' });
         this.checkT = setInterval(() => this.send({ type: 'check_assign' }), this.cfg.checkS * 1000);
-        // Udostępnione czujniki z HA → sieć, tym samym batchem co ESP32 (kanał szyfrowany, BE: onBatch → batch.js).
-        clearInterval(this.dataT);
-        this.dataT = setInterval(() => this.sendSensors(), (this.cfg.dataS || 300) * 1000);
         this.emit('connected');
     }
 
     sendSensors() {
-        if (!this.ha || !this.chan) return 0;
+        if (!this.ha) return 0;
         const entities = ha.toEntities(this.ha.sensors, id => this.shared?.has(id));
+        this.lastEntities = entities; this.lastAt = Math.floor(Date.now() / 1000);
         if (!entities.length) return 0;
+        this.history?.append(entities, this.lastAt);
+        if (!this.chan) return 0;
         this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities });
         if (this.lastSent !== entities.length) this.log(`czujniki do sieci: ${entities.length} (${entities.map(e => e.entity_id).join(', ')})`);
         this.lastSent = entities.length;
         return entities.length;
+    }
+
+    // /data/status i /data/native w formacie płytki ESP32 (http_data.cpp), żeby integracja Sensmos w HA
+    // i apka widziały Hub jak zwykły nod. Wartości jako stringi, age_s od ostatniego odczytu.
+    dataView() {
+        const now = Math.floor(Date.now() / 1000);
+        const ents = this.lastEntities || [];
+        const row = e => ({ entity_id: e.entity_id, value: String(e.value), unit: e.unit || '', age_s: this.lastAt ? now - this.lastAt : 0 });
+        const pub = ents.filter(e => e.entity_id.startsWith('pub.')).map(row), own = ents.filter(e => e.entity_id.startsWith('own.')).map(row);
+        return {
+            status: { device_id: this.id.id, buffer_count: ents.length, uptime_s: Math.floor(process.uptime()), pub, mon: [], own, pool: [] },
+            native: { count: pub.length, entities: pub.map(p => ({ entity_id: p.entity_id.slice(4), pub_id: p.entity_id, value: p.value, unit: p.unit, age_s: p.age_s })) },
+        };
     }
 
     ping() {

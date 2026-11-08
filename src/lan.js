@@ -1,10 +1,11 @@
 // HTTP w LAN — to, czego używa apka przy nodzie: PIN (Bearer), /info, /config, /node/pair.
-// Reszta API płytki (dane, skrypty, LoRa) nie istnieje w hubie i odpowiada 404.
+// Dane: /data/status, /data/native (format płytki, udostępnione czujniki z HA), /data/history (7 dni lokalnie).
+// Reszta API płytki (skrypty, LoRa) nie istnieje w hubie i odpowiada 404.
 const http = require('http');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
-function start({ port, pin, identity, pairing, firmware, owner, sensors, shared, log, onPairingChange }) {
+function start({ port, pin, identity, pairing, firmware, owner, sensors, shared, data, history, log, onPairingChange }) {
     let fails = 0, lockUntil = 0;
     const json = (res, code, obj) => {
         res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -59,6 +60,19 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
             if (!checkPin(req, res)) return;
             const s = sensors?.() || { via: null, error: 'no Home Assistant access', count: 0, sensors: [] };
             return json(res, 200, { ...s, sensors: s.sensors.map(x => ({ ...x, shared: !!shared?.has(x.entity_id) })), shared: shared?.list() || [] });
+        }
+        // Dane w formacie płytki ESP32 (integracja Sensmos w HA: /data/status co 15 s, /data/native co 300 s).
+        if ((url === '/data/status' || url === '/data/native') && req.method === 'GET') {
+            if (!checkPin(req, res)) return;
+            const d = data?.() || { status: { device_id: identity.id, buffer_count: 0, uptime_s: 0, pub: [], mon: [], own: [], pool: [] }, native: { count: 0, entities: [] } };
+            return json(res, 200, url === '/data/status' ? d.status : d.native);
+        }
+        // Historia lokalna udostępnionych czujników (7 dni): ?entity=pub.temp_in&hours=24
+        if (url === '/data/history' && req.method === 'GET') {
+            if (!checkPin(req, res)) return;
+            const q = new URL(req.url, 'http://h').searchParams;
+            const rows = history ? history.query({ entity: q.get('entity') || null, hours: parseInt(q.get('hours')) || 24 }) : [];
+            return json(res, 200, { count: rows.length, rows });
         }
         // Wybór właściciela (apka, PIN): pełna lista entity_id do udostępnienia; pusta = nic nie udostępniam.
         if (url === '/sensors/share' && req.method === 'POST') {

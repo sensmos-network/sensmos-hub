@@ -95,6 +95,8 @@ docker compose exec hub node src/index.js diag --upload --scenario hub-install -
 | `pairing.json` | pairing keys written by phones (up to 4) |
 | `pin.txt` | the PIN, when `HUB_PIN` is empty |
 | `registered.json` | marker that the hub registered with the backend for this wallet |
+| `shared.json` | which Home Assistant sensors you chose to share |
+| `history.jsonl` | the last 7 days of shared sensor readings, kept only here |
 | `events.json`, `state.json` | last 500 log lines and process state, read by `diag` |
 
 ## Home Assistant sensors (from 0.1.2-beta2)
@@ -111,6 +113,10 @@ voltage and battery map to the standard Sensmos entities; anything else is kept 
 
 The log shows what the hub sees (`HA (add-on): 12 sensors: …`), and the app can read the same list from
 the hub with its PIN (`GET /sensors`).
+
+The hub also keeps the last 7 days of shared readings on its own disk (`GET /data/history`) and answers
+`/data/status` and `/data/native` like an ESP32 node, so the Sensmos integration for Home Assistant can add it
+as a physical node.
 
 ## What works in 0.1 and what does not
 
