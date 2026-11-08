@@ -91,4 +91,27 @@ class Shared {
     list() { return [...this.ids]; }
 }
 
-module.exports = { config, toSensor, fetchSensors, HaSensors, Shared };
+// Udostępnione czujniki → encje batcha, tak jak wysyła je płytka ESP32 (pub.<natywna> do data_points, reszta own.*
+// do danych właściciela). device_class HA → natywna encja Sensmos; pierwszy czujnik danej klasy wygrywa, kolejne
+// tej samej klasy idą jako own.ha_<nazwa>, żeby nie nadpisywały się w jednym wierszu.
+const NATIVE = {
+    temperature: 'temp_in', humidity: 'humidity_in', pressure: 'pressure', atmospheric_pressure: 'pressure',
+    carbon_dioxide: 'co2', pm25: 'pm25', pm10: 'pm10', sound_pressure: 'noise_db',
+    door: 'door', garage_door: 'door', window: 'window', motion: 'motion', occupancy: 'presence', presence: 'presence',
+    power: 'load_power', voltage: 'grid_v', battery: 'batt_soc',
+};
+function toEntities(sensors, isShared) {
+    const used = new Set(), out = [];
+    for (const s of sensors) {
+        if (!isShared(s.entity_id)) continue;
+        const value = typeof s.value === 'boolean' ? (s.value ? 1 : 0) : s.value;
+        const ts = s.updated ? Math.floor(Date.parse(s.updated) / 1000) || 0 : 0;
+        const nat = NATIVE[s.device_class];
+        if (nat && !used.has(nat)) { used.add(nat); out.push({ entity_id: 'pub.' + nat, value, unit: s.unit || '', last_updated: ts }); continue; }
+        const own = 'own.ha_' + s.entity_id.split('.')[1].slice(0, 40);
+        out.push({ entity_id: own, value, unit: s.unit || '', last_updated: ts });
+    }
+    return out;
+}
+
+module.exports = { config, toSensor, fetchSensors, HaSensors, Shared, toEntities, NATIVE };

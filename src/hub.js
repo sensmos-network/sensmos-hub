@@ -77,6 +77,7 @@ class Hub {
         this.ws?.close();
         this.lan?.close();
         this.ha?.stop();
+        clearInterval(this.dataT);
         this.mdns?.stop();
         this.events.stop();
     }
@@ -146,7 +147,7 @@ class Hub {
 
     onClose() {
         {
-            clearInterval(this.pingT); clearInterval(this.checkT);
+            clearInterval(this.pingT); clearInterval(this.checkT); clearInterval(this.dataT);
             this.tunnels?.closeAll();
             this.chan = null;
             this.emit('disconnected');
@@ -173,7 +174,20 @@ class Hub {
         this.pingT = setInterval(() => this.ping(), this.cfg.pingS * 1000);
         this.send({ type: 'check_assign' });
         this.checkT = setInterval(() => this.send({ type: 'check_assign' }), this.cfg.checkS * 1000);
+        // Udostępnione czujniki z HA → sieć, tym samym batchem co ESP32 (kanał szyfrowany, BE: onBatch → batch.js).
+        clearInterval(this.dataT);
+        this.dataT = setInterval(() => this.sendSensors(), (this.cfg.dataS || 300) * 1000);
         this.emit('connected');
+    }
+
+    sendSensors() {
+        if (!this.ha || !this.chan) return 0;
+        const entities = ha.toEntities(this.ha.sensors, id => this.shared?.has(id));
+        if (!entities.length) return 0;
+        this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities });
+        if (this.lastSent !== entities.length) this.log(`czujniki do sieci: ${entities.length} (${entities.map(e => e.entity_id).join(', ')})`);
+        this.lastSent = entities.length;
+        return entities.length;
     }
 
     ping() {

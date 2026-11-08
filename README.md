@@ -100,8 +100,10 @@ docker compose exec hub node src/index.js diag --upload --scenario hub-install -
 ## Home Assistant sensors (from 0.1.2-beta2)
 
 The hub reads the sensors Home Assistant already knows (ESPHome, Zigbee, MQTT, anything with a numeric
-state or on/off), read-only and over your LAN. Nothing is sent to the Sensmos network: choosing which
-sensors to share is the next step.
+state or on/off), read-only and over your LAN. Nothing leaves your home until you tick a sensor as shared in
+the app (hub card → Hub sensors). Shared readings go to the network every 5 minutes, the same way an ESP32
+node sends its data: temperature, humidity, pressure, CO₂, PM, noise, door/window, motion/presence, power,
+voltage and battery map to the standard Sensmos entities; anything else is kept as your own data.
 
 - **Add-on:** works on its own through Home Assistant's built-in API.
 - **Docker:** set `HUB_HA_URL` (for example `http://192.168.1.10:8123`) and `HUB_HA_TOKEN` (a long-lived

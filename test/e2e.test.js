@@ -150,6 +150,20 @@ test('E2E: rejestracja, kanał, measure, parowanie, tunel', async () => {
         be.send({ type: 'tun_open', tid: 9, ip: '8.8.8.8', port: 53, ts: ts2, proof: proof2, v: 2 });
         st = await be.until('tun_state');
         assert.strictEqual(st.msg, 'only private LAN addresses allowed');
+
+        // czujniki z HA: bez wyboru nic nie idzie; po wyborze batch z natywną encją i own.* (kanałem szyfrowanym)
+        hub.ha = { sensors: [
+            { entity_id: 'sensor.salon_t', value: 21.4, unit: '°C', device_class: 'temperature', updated: '2026-11-08T10:00:00Z' },
+            { entity_id: 'sensor.kuchnia_t', value: 19.0, unit: '°C', device_class: 'temperature' },
+            { entity_id: 'binary_sensor.drzwi', value: true, device_class: 'door' },
+            { entity_id: 'sensor.prywatny', value: 5, unit: 'x' } ], stop() {} };
+        assert.strictEqual(hub.sendSensors(), 0, 'domyślnie nic nie jest udostępniane');
+        hub.shared.set(['sensor.salon_t', 'sensor.kuchnia_t', 'binary_sensor.drzwi']);
+        assert.strictEqual(hub.sendSensors(), 3);
+        const b = await be.until('batch');
+        assert.strictEqual(b.device_id, hub.id.id);
+        assert.deepStrictEqual(b.entities.map(e => [e.entity_id, e.value]).sort(), [['own.ha_kuchnia_t', 19], ['pub.door', 1], ['pub.temp_in', 21.4]]);
+        assert.ok(!b.entities.some(e => /prywatny/.test(e.entity_id)), 'niezaznaczony czujnik nie wychodzi');
     } finally {
         hub.stop();
         lanSrv.close();
