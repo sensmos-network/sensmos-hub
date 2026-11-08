@@ -99,7 +99,7 @@ docker compose exec hub node src/index.js diag --upload --scenario hub-install -
 | `history.jsonl` | the last 7 days of shared sensor readings, kept only here |
 | `events.json`, `state.json` | last 500 log lines and process state, read by `diag` |
 
-## Home Assistant sensors (from 0.1.2-beta2)
+## Home Assistant sensors (from 0.2.0-beta1)
 
 The hub reads the sensors Home Assistant already knows (ESPHome, Zigbee, MQTT, anything with a numeric
 state or on/off), read-only and over your LAN. Nothing leaves your home until you tick a sensor as shared in

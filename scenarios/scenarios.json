@@ -396,6 +396,119 @@
         "ota_version": "1.12",
         "ota_roundtrip": true
       }
+    },
+    {
+      "id": "hub-020-confirm",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta1",
+      "hardware": {
+        "hub": true
+      },
+      "points": 3,
+      "limit_testers": 20,
+      "title": {
+        "en": "Confirm your Sensmos Hub so it earns GALU",
+        "pl": "Potwierdź swój Sensmos Hub, żeby zarabiał GALU",
+        "de": "Bestätige deinen Sensmos Hub, damit er GALU verdient",
+        "pt": "Confirme seu Sensmos Hub para ele ganhar GALU"
+      },
+      "steps": {
+        "en": [
+          "Install Sensmos Hub (beta) 0.2.0-beta1 (Home Assistant add-on store) or check out the `v0.2.0-beta1` tag for Docker.",
+          "In the app (beta 1.6.5, tester mode) open the hub's card → Location & verification, with the phone on the same Wi-Fi as the hub.",
+          "Run the ceremony and wait for “Ceremony finished”.",
+          "Send the package: `node /app/src/index.js diag --upload --scenario hub-020-confirm --result ok` (Docker: `docker compose exec hub node src/index.js diag --upload --scenario hub-020-confirm --result ok`)."
+        ],
+        "pl": [
+          "Zainstaluj Sensmos Hub (beta) 0.2.0-beta1 (sklep z dodatkami Home Assistant) albo w Dockerze przełącz się na tag `v0.2.0-beta1`.",
+          "W apce (beta 1.6.5, tryb testera) otwórz kartę Huba → Lokalizacja i weryfikacja, z telefonem w tej samej sieci Wi-Fi co Hub.",
+          "Przeprowadź ceremonię i poczekaj na „Ceremonia zakończona”.",
+          "Wyślij paczkę: `node /app/src/index.js diag --upload --scenario hub-020-confirm --result ok` (Docker: `docker compose exec hub node src/index.js diag --upload --scenario hub-020-confirm --result ok`)."
+        ],
+        "de": [
+          "Installiere Sensmos Hub (beta) 0.2.0-beta1 (Home-Assistant-Add-on-Store) oder wechsle in Docker auf den Tag `v0.2.0-beta1`.",
+          "Öffne in der App (Beta 1.6.5, Tester-Modus) die Karte des Hubs → Standort & Verifizierung, mit dem Telefon im selben WLAN wie der Hub.",
+          "Führe die Zeremonie aus und warte auf „Zeremonie abgeschlossen“.",
+          "Sende das Paket: `node /app/src/index.js diag --upload --scenario hub-020-confirm --result ok` (Docker: `docker compose exec hub node src/index.js diag --upload --scenario hub-020-confirm --result ok`)."
+        ],
+        "pt": [
+          "Instale o Sensmos Hub (beta) 0.2.0-beta1 (loja de add-ons do Home Assistant) ou mude para a tag `v0.2.0-beta1` no Docker.",
+          "No app (beta 1.6.5, modo testador) abra o cartão do hub → Localização e verificação, com o telefone no mesmo Wi-Fi que o hub.",
+          "Faça a cerimônia e espere “Cerimônia concluída”.",
+          "Envie o pacote: `node /app/src/index.js diag --upload --scenario hub-020-confirm --result ok` (Docker: `docker compose exec hub node src/index.js diag --upload --scenario hub-020-confirm --result ok`)."
+        ]
+      },
+      "expected": {
+        "en": "The hub signs the challenge and the network marks it as confirmed.",
+        "pl": "Hub podpisuje wyzwanie, a sieć oznacza go jako potwierdzony.",
+        "de": "Der Hub signiert die Challenge und das Netz markiert ihn als bestätigt.",
+        "pt": "O hub assina o desafio e a rede o marca como confirmado."
+      },
+      "auto_check": {
+        "component": "hub",
+        "package": true,
+        "version_prefix": "hub-0.2",
+        "events_any": [
+          "atest LAN podpisany"
+        ]
+      }
+    },
+    {
+      "id": "hub-020-sensors",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta1",
+      "hardware": {
+        "hub": true,
+        "ha": true
+      },
+      "points": 3,
+      "limit_testers": 20,
+      "title": {
+        "en": "Share a Home Assistant sensor through Sensmos Hub",
+        "pl": "Udostępnij czujnik z Home Assistanta przez Sensmos Hub",
+        "de": "Teile einen Home-Assistant-Sensor über den Sensmos Hub",
+        "pt": "Compartilhe um sensor do Home Assistant pelo Sensmos Hub"
+      },
+      "steps": {
+        "en": [
+          "Run Sensmos Hub 0.2.0-beta1 (beta add-on works on its own; Docker needs HUB_HA_URL and HUB_HA_TOKEN in .env).",
+          "Check the hub log for the line `HA (…): N czujników` listing your sensors.",
+          "In the app (beta 1.6.5) open the hub's card → Hub sensors, tick at least one sensor and save.",
+          "Wait 5 minutes for the log line `czujniki do sieci`, then send the package with `--scenario hub-020-sensors --result ok`."
+        ],
+        "pl": [
+          "Uruchom Sensmos Hub 0.2.0-beta1 (dodatek beta działa sam; w Dockerze ustaw HUB_HA_URL i HUB_HA_TOKEN w .env).",
+          "Sprawdź w logu Huba linię `HA (…): N czujników` z listą Twoich czujników.",
+          "W apce (beta 1.6.5) otwórz kartę Huba → Czujniki Huba, zaznacz co najmniej jeden czujnik i zapisz.",
+          "Poczekaj 5 minut na linię `czujniki do sieci` w logu i wyślij paczkę z `--scenario hub-020-sensors --result ok`."
+        ],
+        "de": [
+          "Starte Sensmos Hub 0.2.0-beta1 (das Beta-Add-on funktioniert von selbst; in Docker HUB_HA_URL und HUB_HA_TOKEN in .env setzen).",
+          "Prüfe im Hub-Log die Zeile `HA (…): N czujników` mit deinen Sensoren.",
+          "Öffne in der App (Beta 1.6.5) die Karte des Hubs → Hub-Sensoren, markiere mindestens einen Sensor und speichere.",
+          "Warte 5 Minuten auf die Log-Zeile `czujniki do sieci` und sende dann das Paket mit `--scenario hub-020-sensors --result ok`."
+        ],
+        "pt": [
+          "Rode o Sensmos Hub 0.2.0-beta1 (o add-on beta funciona sozinho; no Docker defina HUB_HA_URL e HUB_HA_TOKEN no .env).",
+          "Confira no log do hub a linha `HA (…): N czujników` com seus sensores.",
+          "No app (beta 1.6.5) abra o cartão do hub → Sensores do hub, marque pelo menos um sensor e salve.",
+          "Espere 5 minutos pela linha `czujniki do sieci` no log e envie o pacote com `--scenario hub-020-sensors --result ok`."
+        ]
+      },
+      "expected": {
+        "en": "The ticked sensor shows on the hub's card in the app; the others never leave home.",
+        "pl": "Zaznaczony czujnik pojawia się na karcie Huba w apce; pozostałe nie wychodzą z domu.",
+        "de": "Der markierte Sensor erscheint auf der Hub-Karte in der App; die übrigen verlassen das Zuhause nicht.",
+        "pt": "O sensor marcado aparece no cartão do hub no app; os outros não saem de casa."
+      },
+      "auto_check": {
+        "component": "hub",
+        "package": true,
+        "version_prefix": "hub-0.2",
+        "events_any": [
+          "czujniki do sieci"
+        ]
+      }
     }
   ]
 }

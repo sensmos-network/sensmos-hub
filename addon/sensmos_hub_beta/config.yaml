@@ -1,5 +1,5 @@
 name: Sensmos Hub (beta)
-version: "0.1.2-beta2"
+version: "0.2.0-beta1"
 slug: sensmos_hub_beta
 description: Test builds of Sensmos Hub for the testers programme. Gets new hub versions before the stable add-on. Runs as a separate node: stop the stable add-on first.
 url: https://github.com/sensmos-network/sensmos-hub
