@@ -14,6 +14,12 @@ or give one of them another port.
 - **pin**: six digits the app asks for when pairing. Leave empty for a random PIN (see the add-on log).
 - **port**: LAN port the app talks to when pairing (default 80).
 
+## Rewards
+
+From 0.1.2 a confirmed hub earns GALU at half the weight of an ESP32 node. Confirm it once from the
+Sensmos app (beta 1.6.4 or newer): hub card → **Confirm hub**, with the phone on the same Wi-Fi as
+this Home Assistant. Several hubs behind one internet address share one hub reward.
+
 ## Reporting
 
 Something broke? Send a diagnostic package from the add-on terminal or report it on

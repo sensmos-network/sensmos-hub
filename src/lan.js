@@ -4,7 +4,7 @@ const http = require('http');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
-function start({ port, pin, identity, pairing, firmware, log, onPairingChange }) {
+function start({ port, pin, identity, pairing, firmware, owner, log, onPairingChange }) {
     let fails = 0, lockUntil = 0;
     const json = (res, code, obj) => {
         res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -53,6 +53,19 @@ function start({ port, pin, identity, pairing, firmware, log, onPairingChange })
                 log(`sparowano telefon (kluczy: ${pairing.count()})`);
                 return json(res, 200, { status: 'ok', keys: pairing.count() });
             }
+        }
+        // Ceremonia LAN (nagrody Huba, BE /v1/attest/hub): apka w tej samej sieci przynosi seed z BE i pozycję
+        // telefonu, Hub podpisuje kanoniczny atest SWOIM device_id i SWOIM właścicielem — nie jest wyrocznią
+        // do podpisywania dowolnych ciągów. Ten sam ciąg podpisuje potem portfel.
+        if (url === '/attest' && req.method === 'POST') {
+            if (!checkPin(req, res)) return;
+            const b = await body(req);
+            const seed = String(b?.seed || ''), lat = String(b?.gps_lat ?? ''), lon = String(b?.gps_lon ?? '');
+            if (!/^[0-9a-f]{64}$/.test(seed)) return json(res, 400, { error: 'seed must be 64 hex chars' });
+            if (!/^-?\d{1,3}(\.\d{1,7})?$/.test(lat) || !/^-?\d{1,3}(\.\d{1,7})?$/.test(lon)) return json(res, 400, { error: 'gps_lat/gps_lon as decimal strings' });
+            const attest = `{"v":1,"kind":"hub","device_id":"${identity.id}","owner":"${String(owner || '').toLowerCase()}","seed":"${seed}","gps_lat":"${lat}","gps_lon":"${lon}"}`;
+            log('atest LAN podpisany dla apki (nagrody Huba)');
+            return json(res, 200, { attest, sig: identity.sign(attest), device_id: identity.id });
         }
         json(res, 404, { error: 'not found' });
     });

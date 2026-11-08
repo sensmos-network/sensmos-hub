@@ -6,8 +6,15 @@ Sensmos app to devices on your LAN, for example the Home Assistant panel, withou
 VPN or a public IP.
 
 **Version 0.1, early.** It speaks the same protocol as the firmware (`kontrakt/protokol/`), so the
-backend and the app treat it as a node. It has no radio, so it does not relay LoRa frames and does
-not earn GALU; it is reported to the backend as kind `hub`.
+backend and the app treat it as a node. It has no radio, so it does not relay LoRa frames; it is
+reported to the backend as kind `hub`.
+
+**Rewards (from 0.1.2, beta first).** A hub earns GALU at half the weight of an ESP32 node once its
+owner confirms it from the Sensmos app: open the hub's card while the phone is on the **same Wi-Fi**
+as the hub and tap **Confirm hub**. The app asks the hub (with its PIN) to sign a one-time challenge,
+signs it with the wallet and sends the phone's location; the backend accepts it only when the phone
+and the hub reach the internet from the same address. Several hubs behind one address share one
+hub reward.
 
 ## What you need
 

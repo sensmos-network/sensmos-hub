@@ -82,3 +82,23 @@ Approximate round trip times in milli-seconds:
     assert.deepStrictEqual(measure.parsePing(win, 4, true), { ok: true, loss: 0, n: 4, rtt: 11, jit: 2 });
     assert.strictEqual(measure.parsePing('ping: unknown host', 4, false), null);
 });
+
+test('LAN API: /attest podpisuje kanoniczny atest Huba (własne id i właściciel), tylko z PIN-em', async () => {
+    const crypto = require('crypto');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-'));
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'secp256k1' });
+    const identity = { id: 'ab'.repeat(32), pubHex: '04', sign: s => crypto.createSign('SHA256').update(s).sign(privateKey).toString('hex') };
+    const server = lan.start({ port: 0, pin: '123456', identity, pairing: new Pairing(dir), firmware: 'hub-test', owner: '0xABCDEF0123456789abcdef0123456789ABCDEF01', log: () => {} });
+    await new Promise(r => server.once('listening', r));
+    const base = `http://127.0.0.1:${server.address().port}`;
+    const post = (body, pin = '123456') => fetch(base + '/attest', { method: 'POST', headers: { Authorization: `Bearer ${pin}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    try {
+        const seed = 'ef'.repeat(32);
+        assert.strictEqual((await post({ seed, gps_lat: '52.25', gps_lon: '21.0' }, '000000')).status, 403);
+        assert.strictEqual((await post({ seed: 'x', gps_lat: '52.25', gps_lon: '21.0' })).status, 400);
+        assert.strictEqual((await post({ seed, gps_lat: '52.25; rm', gps_lon: '21.0' })).status, 400);
+        const j = await (await post({ seed, gps_lat: '52.25', gps_lon: '21.0' })).json();
+        assert.strictEqual(j.attest, `{"v":1,"kind":"hub","device_id":"${'ab'.repeat(32)}","owner":"0xabcdef0123456789abcdef0123456789abcdef01","seed":"${seed}","gps_lat":"52.25","gps_lon":"21.0"}`);
+        assert.ok(crypto.createVerify('SHA256').update(j.attest).verify(publicKey, Buffer.from(j.sig, 'hex')), 'podpis kluczem Huba');
+    } finally { server.close(); }
+});
