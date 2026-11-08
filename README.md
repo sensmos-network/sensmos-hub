@@ -52,7 +52,9 @@ key (`tunel.md`); the server only forwards opaque frames. Only private addresses
 
 The same hub as an add-on, for people who run Home Assistant OS or Supervised:
 
-1. Settings → Add-ons → Add-on store → ⋮ → **Repositories** → add `https://github.com/sensmos-network/sensmos-hub`.
+[![Add the repository to my Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsensmos-network%2Fsensmos-hub)
+
+1. Settings → Add-ons → Add-on store → ⋮ → **Repositories** → add `https://github.com/sensmos-network/sensmos-hub` (or use the button above).
 2. Install **Sensmos Hub**, fill in **owner** (wallet address) and optionally **pin**, start it.
 3. Pair from the app as above; the HA panel integration then points at this machine, port 8123.
 
