@@ -237,7 +237,7 @@
       },
       "points": 10,
       "limit_testers": 10,
-      "ends_at": "2026-11-30T23:59:59Z",
+      "ends_at": "2026-11-09T23:59:59Z",
       "title": {
         "en": "Firmware 1.10 on a LoRa node: OTA there and back",
         "pl": "Firmware 1.10 na nodzie z LoRa: OTA tam i z powrotem",
@@ -282,6 +282,64 @@
         "device_online": true,
         "lora": true,
         "ota_version": "1.10-lora2",
+        "ota_roundtrip": true
+      }
+    },
+    {
+      "id": "fw-112-lora-ota",
+      "component": "fw",
+      "min_version": "1.12-lora2",
+      "hardware": {
+        "esp32": true,
+        "lora": true
+      },
+      "points": 10,
+      "limit_testers": 10,
+      "ends_at": "2026-12-15T23:59:59Z",
+      "title": {
+        "en": "Firmware 1.12 on a LoRa node: OTA there and back",
+        "pl": "Firmware 1.12 na nodzie z LoRa: OTA tam i z powrotem",
+        "de": "Firmware 1.12 auf einem LoRa-Node: OTA hin und zurück",
+        "pt": "Firmware 1.12 em um node LoRa: OTA ida e volta"
+      },
+      "steps": {
+        "en": [
+          "Pick one online ESP32 node with a LoRa radio (Heltec V3, LilyGO T3, Wio) that is not critical for you. Start this scenario and choose it.",
+          "The server queues 1.12-lora2. The node updates and reports 1.12-lora2; after 10 minutes online the server orders the way back to the previous version, and after another 10 minutes 1.12-lora2 again.",
+          "The whole loop takes about 40 minutes. You do nothing; the server passes the scenario itself when the node completes the loop.",
+          "If the node reverts on its own or stops reporting, the scenario fails and the version is blocked for everyone: that is the point of this test (a new version must still accept updates)."
+        ],
+        "pl": [
+          "Wybierz jeden nod ESP32 online z radiem LoRa (Heltec V3, LilyGO T3, Wio), który nie jest dla Ciebie krytyczny. Rozpocznij ten scenariusz i wskaż go.",
+          "Serwer zakolejkuje 1.12-lora2. Nod aktualizuje się i zgłasza 1.12-lora2; po 10 minutach online serwer każe wrócić na poprzednią wersję, a po kolejnych 10 minutach znów na 1.12-lora2.",
+          "Całe kółko trwa ok. 40 minut. Nic nie robisz; serwer sam zalicza scenariusz, gdy nod przejdzie pełne kółko.",
+          "Jeśli nod sam się cofnie albo przestanie się meldować, scenariusz jest niezaliczony, a wersja blokowana dla wszystkich: o to w tym teście chodzi (nowa wersja musi dalej przyjmować aktualizacje)."
+        ],
+        "de": [
+          "Wähle einen ESP32-Node online mit LoRa-Funk (Heltec V3, LilyGO T3, Wio), der für dich nicht kritisch ist. Starte dieses Szenario und wähle ihn.",
+          "Der Server reiht 1.12-lora2 ein. Der Node aktualisiert und meldet 1.12-lora2; nach 10 Minuten online befiehlt der Server den Weg zurück zur vorherigen Version und nach weiteren 10 Minuten wieder 1.12-lora2.",
+          "Die ganze Schleife dauert etwa 40 Minuten. Du tust nichts; der Server besteht das Szenario selbst, wenn der Node die Schleife vollendet.",
+          "Kehrt der Node von selbst zurück oder meldet er sich nicht mehr, scheitert das Szenario und die Version wird für alle gesperrt: genau darum geht es (eine neue Version muss weiterhin Updates annehmen)."
+        ],
+        "pt": [
+          "Escolha um node ESP32 online com rádio LoRa (Heltec V3, LilyGO T3, Wio) que não seja crítico para você. Inicie este cenário e escolha-o.",
+          "O servidor enfileira 1.12-lora2. O node atualiza e reporta 1.12-lora2; após 10 minutos online o servidor ordena a volta para a versão anterior e, após mais 10 minutos, 1.12-lora2 de novo.",
+          "O ciclo todo leva cerca de 40 minutos. Você não faz nada; o servidor aprova o cenário sozinho quando o node completa o ciclo.",
+          "Se o node voltar sozinho ou parar de reportar, o cenário falha e a versão é bloqueada para todos: é essa a razão do teste (uma versão nova precisa continuar aceitando atualizações)."
+        ]
+      },
+      "expected": {
+        "en": "The node reports 1.12-lora2, then the previous version, then 1.12-lora2 again, each time staying online.",
+        "pl": "Nod zgłasza 1.12-lora2, potem poprzednią wersję, potem znów 1.12-lora2, za każdym razem zostając online.",
+        "de": "Der Node meldet 1.12-lora2, dann die vorherige Version, dann wieder 1.12-lora2 und bleibt jedes Mal online.",
+        "pt": "O node reporta 1.12-lora2, depois a versão anterior, depois 1.12-lora2 de novo, ficando online a cada vez."
+      },
+      "auto_check": {
+        "component": "fw",
+        "version_prefix": "1.12-lora",
+        "device_online": true,
+        "lora": true,
+        "ota_version": "1.12-lora2",
         "ota_roundtrip": true
       }
     },
