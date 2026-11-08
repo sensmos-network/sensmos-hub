@@ -7,16 +7,19 @@ const path = require('path');
 const KEEP_S = 7 * 86400;
 
 class History {
-    constructor(dir, { keepS = KEEP_S, pruneEvery = 288 } = {}) {
+    constructor(dir, { keepS = KEEP_S, pruneEvery = 288, log = () => {} } = {}) {
         this.file = path.join(dir, 'history.jsonl');
-        this.keepS = keepS; this.pruneEvery = pruneEvery; this.writes = 0;
+        this.keepS = keepS; this.pruneEvery = pruneEvery; this.writes = 0; this.log = log;
+        try { if (fs.existsSync(this.file)) this.prune(); } catch (e) { this.log(`historia: ${e.message}`); }   // restart nie zeruje przycinania
     }
 
     append(entities, now = Math.floor(Date.now() / 1000)) {
         if (!entities.length) return;
-        const lines = entities.map(e => JSON.stringify({ t: now, e: e.entity_id, v: e.value, u: e.unit || '' })).join('\n') + '\n';
-        fs.appendFileSync(this.file, lines);
-        if (++this.writes % this.pruneEvery === 0) this.prune(now);
+        try {
+            const lines = entities.map(e => JSON.stringify({ t: now, e: e.entity_id, v: e.value, u: e.unit || '' })).join('\n') + '\n';
+            fs.appendFileSync(this.file, lines);
+            if (++this.writes % this.pruneEvery === 0) this.prune(now);
+        } catch (e) { this.log(`historia: zapis nieudany (${e.message})`); }   // pełny dysk / tylko do odczytu nie kładzie Huba
     }
 
     rows() {
@@ -34,9 +37,10 @@ class History {
     }
 
     // Odczyt dla apki / integracji: jedna encja albo wszystkie, z ostatnich `hours` godzin.
-    query({ entity = null, hours = 24, now = Math.floor(Date.now() / 1000) } = {}) {
+    query({ entity = null, hours = 24, now = Math.floor(Date.now() / 1000), limit = 5000 } = {}) {
         const from = now - Math.min(Math.max(hours, 1), 168) * 3600;
-        return this.rows().filter(r => r.t >= from && (!entity || r.e === entity)).map(r => ({ t: r.t, e: r.e, v: r.v, u: r.u }));
+        const out = this.rows().filter(r => r.t >= from && (!entity || r.e === entity)).map(r => ({ t: r.t, e: r.e, v: r.v, u: r.u }));
+        return out.length > limit ? out.slice(-limit) : out;   // najnowsze; bez tego 200 czujników × 7 dni = MB w jednej odpowiedzi
     }
 }
 

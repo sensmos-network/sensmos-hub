@@ -59,9 +59,8 @@ class HaSensors {
             this.sensors = list; this.at = new Date().toISOString();
             const sig = list.map(s => s.entity_id).join(',');
             if (this.error || sig !== this.lastSig) {
-                this.log(`HA (${this.cfg.via}): ${list.length} czujników` + (list.length ? ': ' +
-                    list.slice(0, 12).map(s => `${s.entity_id}=${s.value}${s.unit ? ' ' + s.unit : ''}`).join(', ') +
-                    (list.length > 12 ? ` … +${list.length - 12}` : '') : ''));
+                // Bez wartości i nazw: log trafia do paczki diagnostycznej, a czujniki nieudostępnione nie wychodzą z domu.
+                this.log(`HA (${this.cfg.via}): ${list.length} czujników`);
             }
             this.lastSig = sig; this.error = null;
         } catch (e) {
@@ -84,7 +83,8 @@ class Shared {
     set(ids) {
         const clean = [...new Set((ids || []).map(String).filter(id => /^(sensor|binary_sensor)\.[a-z0-9_]{1,120}$/.test(id)))].slice(0, 200).sort();
         this.ids = new Set(clean);
-        require('fs').writeFileSync(this.file, JSON.stringify({ shared: clean, at: new Date().toISOString() }, null, 1) + '\n');
+        try { require('fs').writeFileSync(this.file, JSON.stringify({ shared: clean, at: new Date().toISOString() }, null, 1) + '\n'); }
+        catch (e) { throw new Error('cannot save the choice: ' + e.message); }
         return clean;
     }
     has(id) { return this.ids.has(id); }
@@ -94,21 +94,42 @@ class Shared {
 // Udostępnione czujniki → encje batcha, tak jak wysyła je płytka ESP32 (pub.<natywna> do data_points, reszta own.*
 // do danych właściciela). device_class HA → natywna encja Sensmos; pierwszy czujnik danej klasy wygrywa, kolejne
 // tej samej klasy idą jako own.ha_<nazwa>, żeby nie nadpisywały się w jednym wierszu.
-const NATIVE = {
+// Per domena: binary_sensor „battery” to niska bateria (0/1), nie poziom; „power” w binary_sensor to wł./wył.
+const NATIVE_SENSOR = {
     temperature: 'temp_in', humidity: 'humidity_in', pressure: 'pressure', atmospheric_pressure: 'pressure',
     carbon_dioxide: 'co2', pm25: 'pm25', pm10: 'pm10', sound_pressure: 'noise_db',
-    door: 'door', garage_door: 'door', window: 'window', motion: 'motion', occupancy: 'presence', presence: 'presence',
     power: 'load_power', voltage: 'grid_v', battery: 'batt_soc',
 };
+const NATIVE_BINARY = { door: 'door', garage_door: 'door', window: 'window', motion: 'motion', occupancy: 'presence', presence: 'presence' };
+const NATIVE = { ...NATIVE_SENSOR, ...NATIVE_BINARY };
+// Jednostka natywnej encji w sieci; inne jednostki przeliczamy albo (gdy się nie da) wysyłamy jako own.*.
+const UNIT = { temp_in: '°C', humidity_in: '%', pressure: 'hPa', co2: 'ppm', pm25: 'µg/m³', pm10: 'µg/m³', noise_db: 'dB', load_power: 'W', grid_v: 'V', batt_soc: '%' };
+const CONVERT = {
+    '°F>°C': v => (v - 32) * 5 / 9, 'K>°C': v => v - 273.15, 'kPa>hPa': v => v * 10, 'Pa>hPa': v => v / 100, 'mbar>hPa': v => v,
+    'inHg>hPa': v => v * 33.8639, 'psi>hPa': v => v * 68.9476, 'kW>W': v => v * 1000, 'mV>V': v => v / 1000, 'dBA>dB': v => v,
+    'μg/m³>µg/m³': v => v,
+};
+function nativeValue(nat, s, value) {
+    if (typeof value !== 'number') return null;
+    const want = UNIT[nat];
+    if (!want) return { value, unit: s.unit || '' };   // binarne: 0/1 bez jednostki
+    const have = s.unit || '';
+    if (have === want) return { value, unit: want };
+    const f = CONVERT[have + '>' + want];
+    return f ? { value: Math.round(f(value) * 100) / 100, unit: want } : null;
+}
 function toEntities(sensors, isShared) {
     const used = new Set(), out = [];
     for (const s of sensors) {
         if (!isShared(s.entity_id)) continue;
         const value = typeof s.value === 'boolean' ? (s.value ? 1 : 0) : s.value;
         const ts = s.updated ? Math.floor(Date.parse(s.updated) / 1000) || 0 : 0;
-        const nat = NATIVE[s.device_class];
-        if (nat && !used.has(nat)) { used.add(nat); out.push({ entity_id: 'pub.' + nat, value, unit: s.unit || '', last_updated: ts }); continue; }
-        const own = 'own.ha_' + s.entity_id.split('.')[1].slice(0, 40);
+        const [domain, obj] = s.entity_id.split('.');
+        const nat = (domain === 'binary_sensor' ? NATIVE_BINARY : NATIVE_SENSOR)[s.device_class];
+        const nv = nat && !used.has(nat) ? nativeValue(nat, s, value) : null;
+        if (nv) { used.add(nat); out.push({ entity_id: 'pub.' + nat, value: nv.value, unit: nv.unit, last_updated: ts }); continue; }
+        // own.ha_s_<obj> / own.ha_b_<obj>: 48 znaków jak w BE (soft_data), domena w nazwie = bez kolizji
+        const own = 'own.ha_' + (domain === 'binary_sensor' ? 'b_' : 's_') + obj.slice(0, 39);
         out.push({ entity_id: own, value, unit: s.unit || '', last_updated: ts });
     }
     return out;

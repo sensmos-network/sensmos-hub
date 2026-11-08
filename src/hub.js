@@ -31,6 +31,7 @@ class Hub {
         this.events = new diag.Events(this.cfg.data);
         const out = cfg.log || ((...a) => console.log(new Date().toISOString().slice(11, 19), ...a));
         this.log = (...a) => { this.events.push(a.join(' ')); out(...a); };
+        this.logLocal = out;   // tylko konsola: sekrety (PIN) nie mogą trafić do events.json i paczki diag
         this.id = identity.load(this.cfg.data);
         this.pairing = new Pairing(this.cfg.data);
         this.pin = this.loadPin();
@@ -55,10 +56,10 @@ class Hub {
     async start() {
         diag.writeState(this.cfg.data, { version: FIRMWARE });
         this.log(`Sensmos Hub ${FIRMWARE} — device_id ${this.id.id}`);
-        this.log(`PIN hubu: ${this.pin} (apka pyta o niego przy parowaniu i eksporcie)`);
+        this.logLocal(`PIN hubu: ${this.pin} (apka pyta o niego przy parowaniu i eksporcie)`);
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: this.cfg.owner,
             sensors: () => this.ha?.snapshot() || null, shared: this.shared = new ha.Shared(this.cfg.data),
-            data: () => this.dataView(), history: this.history = new History(this.cfg.data),
+            data: () => this.dataView(), history: this.history = new History(this.cfg.data, { log: this.log }),
             log: this.log, onPairingChange: () => this.ws?.close() });
         await new Promise(r => this.lan.once('listening', r));
         // apka szuka noda po nazwie sensmos-<id>.local i mówi do portu 80 (jak do płytki)
@@ -183,10 +184,14 @@ class Hub {
     }
 
     sendSensors() {
-        if (!this.ha) return 0;
+        if (!this.ha || this.ha.error) return 0;   // HA niedostępny: nie udajemy świeżych odczytów
         const entities = ha.toEntities(this.ha.sensors, id => this.shared?.has(id));
         this.lastEntities = entities; this.lastAt = Math.floor(Date.now() / 1000);
-        if (!entities.length) return 0;
+        if (!entities.length) {
+            if (this.lastSent && this.chan) { this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities: [] }); this.log('czujniki do sieci: 0 (wycofane)'); }
+            this.lastSent = 0;
+            return 0;
+        }
         this.history?.append(entities, this.lastAt);
         if (!this.chan) return 0;
         this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities });
@@ -200,7 +205,7 @@ class Hub {
     dataView() {
         const now = Math.floor(Date.now() / 1000);
         const ents = this.lastEntities || [];
-        const row = e => ({ entity_id: e.entity_id, value: String(e.value), unit: e.unit || '', age_s: this.lastAt ? now - this.lastAt : 0 });
+        const row = e => ({ entity_id: e.entity_id, value: String(e.value), unit: e.unit || '', age_s: Math.max(0, now - (e.last_updated || this.lastAt || now)) });
         const pub = ents.filter(e => e.entity_id.startsWith('pub.')).map(row), own = ents.filter(e => e.entity_id.startsWith('own.')).map(row);
         return {
             status: { device_id: this.id.id, buffer_count: ents.length, uptime_s: Math.floor(process.uptime()), pub, mon: [], own, pool: [] },

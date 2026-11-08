@@ -162,11 +162,11 @@ test('E2E: rejestracja, kanał, measure, parowanie, tunel', async () => {
         assert.strictEqual(hub.sendSensors(), 3);
         const b = await be.until('batch');
         assert.strictEqual(b.device_id, hub.id.id);
-        assert.deepStrictEqual(b.entities.map(e => [e.entity_id, e.value]).sort(), [['own.ha_kuchnia_t', 19], ['pub.door', 1], ['pub.temp_in', 21.4]]);
+        assert.deepStrictEqual(b.entities.map(e => [e.entity_id, e.value]).sort(), [['own.ha_s_kuchnia_t', 19], ['pub.door', 1], ['pub.temp_in', 21.4]]);
         assert.ok(!b.entities.some(e => /prywatny/.test(e.entity_id)), 'niezaznaczony czujnik nie wychodzi');
         const view = hub.dataView();
         assert.deepStrictEqual(view.status.pub.map(e => e.entity_id).sort(), ['pub.door', 'pub.temp_in']);
-        assert.deepStrictEqual(view.status.own.map(e => e.entity_id), ['own.ha_kuchnia_t']);
+        assert.deepStrictEqual(view.status.own.map(e => e.entity_id), ['own.ha_s_kuchnia_t']);
         assert.strictEqual(view.native.entities.find(e => e.entity_id === 'temp_in').value, '21.4');
         assert.strictEqual(hub.history.query({ hours: 1 }).length, 3, 'wysłane odczyty są też w historii lokalnej');
     } finally {

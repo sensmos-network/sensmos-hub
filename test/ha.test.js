@@ -52,7 +52,7 @@ test('HaSensors: log przy pierwszym odczycie i przy błędzie, cisza gdy nic si�
         const h = new ha.HaSensors({ cfg: { url, token: 'tok', via: 'token' }, log: m => logs.push(m) });
         await h.poll(); await h.poll();
         assert.strictEqual(logs.length, 1);
-        assert.match(logs[0], /HA \(token\): 3 czujników: binary_sensor\.drzwi=true, sensor\.salon_temperatura=21\.4 °C/);
+        assert.strictEqual(logs[0], 'HA (token): 3 czujników', 'log bez nazw i wartości (trafia do paczki diag)');
         h.cfg.token = 'zly'; await h.poll(); await h.poll();
         assert.strictEqual(logs.length, 2);
         assert.match(logs[1], /odrzucił token/);
@@ -138,4 +138,21 @@ test('LAN /data/status, /data/native, /data/history w formacie płytki, tylko z 
         assert.strictEqual(hist.count, 1);
         assert.strictEqual(hist.rows[0].v, 21.4);
     } finally { server.close(); }
+});
+
+test('mapowanie per domena i jednostki: binarna bateria nie jest poziomem, °F → °C, nieznana jednostka → own.*', () => {
+    const all = () => true;
+    const out = ha.toEntities([
+        { entity_id: 'binary_sensor.bateria', value: true, device_class: 'battery' },
+        { entity_id: 'sensor.ogrod', value: 68, unit: '°F', device_class: 'temperature' },
+        { entity_id: 'sensor.moc', value: 1.5, unit: 'kW', device_class: 'power' },
+        { entity_id: 'sensor.cisn', value: 30, unit: 'dziwne', device_class: 'pressure' },
+        { entity_id: 'sensor.door', value: 1 }, { entity_id: 'binary_sensor.door', value: false },
+    ], all);
+    const by = Object.fromEntries(out.map(e => [e.entity_id, e]));
+    assert.ok(by['own.ha_b_bateria'], 'binary battery → own');
+    assert.deepStrictEqual([by['pub.temp_in'].value, by['pub.temp_in'].unit], [20, '°C']);
+    assert.deepStrictEqual([by['pub.load_power'].value, by['pub.load_power'].unit], [1500, 'W']);
+    assert.ok(by['own.ha_s_cisn'] && !by['pub.pressure'], 'nieprzeliczalna jednostka nie trafia do natywnej');
+    assert.ok(by['own.ha_s_door'] && by['own.ha_b_door'], 'sensor.x i binary_sensor.x bez kolizji');
 });

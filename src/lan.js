@@ -6,22 +6,25 @@ const http = require('http');
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
 function start({ port, pin, identity, pairing, firmware, owner, sensors, shared, data, history, log, onPairingChange }) {
-    let fails = 0, lockUntil = 0;
+    const tries = new Map();   // adres → { fails, lockUntil }: blokada per nadawca, nie dla całego LAN-u
     const json = (res, code, obj) => {
         res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify(obj));
     };
     const checkPin = (req, res) => {
-        const now = Date.now();
-        if (lockUntil && now < lockUntil) { json(res, 429, { error: 'too_many_attempts' }); return false; }
-        if (req.headers.authorization === `Bearer ${pin}`) { fails = 0; lockUntil = 0; return true; }
-        if (++fails >= LOCK_AFTER) { fails = 0; lockUntil = now + LOCK_MS; }
+        const now = Date.now(), who = req.socket.remoteAddress || '?';
+        const t = tries.get(who) || { fails: 0, lockUntil: 0 };
+        if (t.lockUntil && now < t.lockUntil) { json(res, 429, { error: 'too_many_attempts' }); return false; }
+        if (req.headers.authorization === `Bearer ${pin}`) { tries.delete(who); return true; }
+        if (++t.fails >= LOCK_AFTER) { t.fails = 0; t.lockUntil = now + LOCK_MS; }
+        tries.set(who, t);
+        if (tries.size > 1000) tries.clear();
         json(res, 403, { error: 'forbidden' });
         return false;
     };
     const body = req => new Promise(resolve => {
         const chunks = [];
-        req.on('data', c => { chunks.push(c); if (Buffer.concat(chunks).length > 4096) req.destroy(); });
+        req.on('data', c => { chunks.push(c); if (Buffer.concat(chunks).length > 4096) { resolve(null); req.destroy(); } });
         req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); } catch { resolve(null); } });
         req.on('error', () => resolve(null));
     });
@@ -80,7 +83,8 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
             if (!shared) return json(res, 503, { error: 'no storage' });
             const b = await body(req);
             if (!b || !Array.isArray(b.shared)) return json(res, 400, { error: 'expected { shared: [entity_id, …] }' });
-            const list = shared.set(b.shared);
+            let list;
+            try { list = shared.set(b.shared); } catch (e) { return json(res, 500, { error: e.message }); }
             log(`czujniki do udostępnienia: ${list.length}${list.length ? ' (' + list.slice(0, 8).join(', ') + (list.length > 8 ? ' …' : '') + ')' : ''}`);
             return json(res, 200, { status: 'ok', shared: list });
         }
