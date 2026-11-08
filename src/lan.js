@@ -4,7 +4,7 @@ const http = require('http');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
-function start({ port, pin, identity, pairing, firmware, owner, sensors, log, onPairingChange }) {
+function start({ port, pin, identity, pairing, firmware, owner, sensors, shared, log, onPairingChange }) {
     let fails = 0, lockUntil = 0;
     const json = (res, code, obj) => {
         res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -57,8 +57,18 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, log, on
         // Czujniki widziane w Home Assistancie (podgląd dla apki; nic z tego nie wychodzi do sieci bez wyboru właściciela).
         if (url === '/sensors' && req.method === 'GET') {
             if (!checkPin(req, res)) return;
-            const s = sensors?.();
-            return json(res, 200, s || { via: null, error: 'no Home Assistant access', count: 0, sensors: [] });
+            const s = sensors?.() || { via: null, error: 'no Home Assistant access', count: 0, sensors: [] };
+            return json(res, 200, { ...s, sensors: s.sensors.map(x => ({ ...x, shared: !!shared?.has(x.entity_id) })), shared: shared?.list() || [] });
+        }
+        // Wybór właściciela (apka, PIN): pełna lista entity_id do udostępnienia; pusta = nic nie udostępniam.
+        if (url === '/sensors/share' && req.method === 'POST') {
+            if (!checkPin(req, res)) return;
+            if (!shared) return json(res, 503, { error: 'no storage' });
+            const b = await body(req);
+            if (!b || !Array.isArray(b.shared)) return json(res, 400, { error: 'expected { shared: [entity_id, …] }' });
+            const list = shared.set(b.shared);
+            log(`czujniki do udostępnienia: ${list.length}${list.length ? ' (' + list.slice(0, 8).join(', ') + (list.length > 8 ? ' …' : '') + ')' : ''}`);
+            return json(res, 200, { status: 'ok', shared: list });
         }
         // Ceremonia LAN (nagrody Huba, BE /v1/attest/hub): apka w tej samej sieci przynosi seed z BE i pozycję
         // telefonu, Hub podpisuje kanoniczny atest SWOIM device_id i SWOIM właścicielem — nie jest wyrocznią

@@ -76,4 +76,19 @@ class HaSensors {
     snapshot() { return { via: this.cfg.via, at: this.at, error: this.error, count: this.sensors.length, sensors: this.sensors }; }
 }
 
-module.exports = { config, toSensor, fetchSensors, HaSensors };
+// Wybór właściciela: które czujniki udostępnić sieci (temat 2). Domyślnie żaden. Plik data/shared.json,
+// lista entity_id. Wysyłka do sieci to temat 3 — tu tylko zapamiętanie wyboru.
+class Shared {
+    constructor(dir) { this.file = require('path').join(dir, 'shared.json'); this.ids = new Set(this.read()); }
+    read() { try { const j = JSON.parse(require('fs').readFileSync(this.file, 'utf8')); return Array.isArray(j.shared) ? j.shared.map(String) : []; } catch { return []; } }
+    set(ids) {
+        const clean = [...new Set((ids || []).map(String).filter(id => /^(sensor|binary_sensor)\.[a-z0-9_]{1,120}$/.test(id)))].slice(0, 200).sort();
+        this.ids = new Set(clean);
+        require('fs').writeFileSync(this.file, JSON.stringify({ shared: clean, at: new Date().toISOString() }, null, 1) + '\n');
+        return clean;
+    }
+    has(id) { return this.ids.has(id); }
+    list() { return [...this.ids]; }
+}
+
+module.exports = { config, toSensor, fetchSensors, HaSensors, Shared };

@@ -79,3 +79,25 @@ test('LAN /sensors: podgląd tylko z PIN-em; bez dostępu do HA czytelna informa
         assert.strictEqual(j.count, 1);
     } finally { server.close(); }
 });
+
+test('wybór do udostępnienia: domyślnie żaden, zapis na dysku, tylko poprawne entity_id, LAN z PIN-em', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-'));
+    const shared = new ha.Shared(dir);
+    assert.deepStrictEqual(shared.list(), []);
+    const snap = { via: 'add-on', count: 2, sensors: [{ entity_id: 'sensor.a', value: 1 }, { entity_id: 'binary_sensor.b', value: true }] };
+    const server = lan.start({ port: 0, pin: '123456', identity: { id: 'ab'.repeat(32), pubHex: '04' }, pairing: new Pairing(dir), firmware: 'hub-test',
+        sensors: () => snap, shared, log: () => {} });
+    await new Promise(r => server.once('listening', r));
+    const base = `http://127.0.0.1:${server.address().port}`;
+    const H = { Authorization: 'Bearer 123456', 'Content-Type': 'application/json' };
+    try {
+        let j = await (await fetch(base + '/sensors', { headers: H })).json();
+        assert.deepStrictEqual(j.sensors.map(s => s.shared), [false, false]);
+        assert.strictEqual((await fetch(base + '/sensors/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"shared":[]}' })).status, 403);
+        const r = await (await fetch(base + '/sensors/share', { method: 'POST', headers: H, body: JSON.stringify({ shared: ['sensor.a', 'light.x', 'sensor.a', 'zle id'] }) })).json();
+        assert.deepStrictEqual(r.shared, ['sensor.a']);
+        j = await (await fetch(base + '/sensors', { headers: H })).json();
+        assert.deepStrictEqual(j.sensors.map(s => s.shared), [true, false]);
+        assert.deepStrictEqual(new ha.Shared(dir).list(), ['sensor.a'], 'wybór przeżywa restart');
+    } finally { server.close(); }
+});
