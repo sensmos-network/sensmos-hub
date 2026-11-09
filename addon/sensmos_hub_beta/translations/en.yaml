@@ -12,3 +12,8 @@ configuration:
   port:
     name: LAN port
     description: Port the app talks to on your network. Keep 80 unless another add-on uses it.
+  lora_key:
+    name: LoRa key phrase
+    description: >-
+      The same phrase you set in your LoRa sensors. The hub decrypts their frames with it and shows them
+      as sensor.sensmos_lora_* entities. Optional: you can also set it in the app (hub card → LoRa).

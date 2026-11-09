@@ -13,6 +13,21 @@ or give one of them another port.
 - **owner**: the wallet address from the Sensmos app (Wallet screen), `0x…`.
 - **pin**: six digits the app asks for when pairing. Leave empty for a random PIN (see the add-on log).
 - **port**: LAN port the app talks to when pairing (default 80).
+- **lora_key**: the key phrase of your LoRa sensors (optional, from 0.2.0-beta2). See below.
+
+## LoRa sensors without a radio (from 0.2.0-beta2)
+
+The hub has no radio, but your LoRa sensors can still report to this Home Assistant. A sensor sends its
+DATA frames to the hub's id (the 8 characters in the log line `LoRa: czujniki nadają do id …`), any Sensmos
+node within radio range hears them, and the network delivers them to the hub over the internet. The
+frames stay encrypted on the way: only the hub, with your key phrase, can read them.
+
+- Set the key phrase in **lora_key** or in the app (hub card → LoRa → frame reception).
+- Each sensor sub-address shows up as `sensor.sensmos_lora_<sub>`. A payload like `t=21.5;h=40;bat=87`
+  also gives `sensor.sensmos_lora_<sub>_t`, `…_h`, `…_bat` with units (t °C, h %, p hPa, bat %, v V, co2 ppm, lux).
+- Every frame fires the `sensmos_lora_frame` event for automations.
+- No HACS integration needed. If you also use the Sensmos integration with this hub, it shows the same
+  frames as **LoRa DATA frame** sensors.
 
 ## Rewards
 

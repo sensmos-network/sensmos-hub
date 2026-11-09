@@ -1,11 +1,12 @@
 // HTTP w LAN — to, czego używa apka przy nodzie: PIN (Bearer), /info, /config, /node/pair.
 // Dane: /data/status, /data/native (format płytki, udostępnione czujniki z HA), /data/history (7 dni lokalnie).
-// Reszta API płytki (skrypty, LoRa) nie istnieje w hubie i odpowiada 404.
+// LoRa jak w płytce (bez radia): /lora/inbox, /node/lora_rx, /node/lorasend (przez sieć), /node/lora_emerg (puste).
+// Reszta API płytki (skrypty) nie istnieje w hubie i odpowiada 404.
 const http = require('http');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
-function start({ port, pin, identity, pairing, firmware, owner, sensors, shared, data, history, log, onPairingChange }) {
+function start({ port, pin, identity, pairing, firmware, owner, sensors, shared, data, history, lora, connected, log, onPairingChange }) {
     const tries = new Map();   // adres → { fails, lockUntil }: blokada per nadawca, nie dla całego LAN-u
     const json = (res, code, obj) => {
         res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -37,7 +38,7 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
             return res.end();
         }
         if (url === '/' || url === '/info') {
-            return json(res, 200, { device_id: identity.id, firmware, hub: true, paired: pairing.has(), pubkey: identity.pubHex });
+            return json(res, 200, { device_id: identity.id, firmware, hub: true, paired: pairing.has(), pubkey: identity.pubHex, ...(lora ? { lora: lora.info() } : {}) });
         }
         if (url === '/config' && req.method === 'GET') {
             if (!checkPin(req, res)) return;
@@ -100,6 +101,33 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
             const attest = `{"v":1,"kind":"hub","device_id":"${identity.id}","owner":"${String(owner || '').toLowerCase()}","seed":"${seed}","gps_lat":"${lat}","gps_lon":"${lon}"}`;
             log('atest LAN podpisany dla apki (nagrody Huba)');
             return json(res, 200, { attest, sig: identity.sign(attest), device_id: identity.id });
+        }
+        // LoRa: ramki DATA od czujników dowozi BE (ws), kafel LoRa w apce i integracja HA mówią do tych samych ścieżek co w płytce.
+        if (lora && url === '/lora/inbox' && req.method === 'GET') {
+            if (!checkPin(req, res)) return;
+            return json(res, 200, lora.inbox());
+        }
+        if (lora && url === '/node/lora_rx') {
+            if (!checkPin(req, res)) return;
+            if (req.method === 'GET') return json(res, 200, lora.state());
+            if (req.method === 'POST') {
+                const b = await body(req);
+                if (!b) return json(res, 400, { error: 'bad json' });
+                if (b.key !== undefined && (typeof b.key !== 'string' || b.key.length > 128)) return json(res, 400, { error: 'key: text up to 128 chars' });
+                return json(res, 200, lora.configure({ key: b.key, open: typeof b.open === 'boolean' ? b.open : undefined }));
+            }
+        }
+        if (lora && url === '/node/lorasend' && req.method === 'POST') {
+            if (!checkPin(req, res)) return;
+            const b = await body(req);
+            if (!b) return json(res, 400, { error: 'bad json' });
+            const r = lora.sendData({ dst: b.dst, sub: b.sub ?? 0, payload: b.payload, aes: b.aes === true }, !!connected?.());
+            return json(res, r.error ? 400 : 200, r);
+        }
+        if (lora && url === '/node/lora_emerg') {
+            if (!checkPin(req, res)) return;
+            if (req.method === 'GET') return json(res, 200, { eids: [], active: false, webhook: '', webhook_get: false });
+            return json(res, 400, { error: 'no radio' });
         }
         json(res, 404, { error: 'not found' });
     });

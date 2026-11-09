@@ -5,5 +5,6 @@ opt() { node -e "const o=require('/data/options.json');process.stdout.write(Stri
 export HUB_OWNER="$(opt owner)"
 export HUB_PIN="$(opt pin)"
 export HUB_PORT="$(opt port)"
+export HUB_LORA_KEY="$(opt lora_key)"
 export HUB_DATA=/data
 exec node /app/src/index.js

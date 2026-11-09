@@ -13,6 +13,7 @@ const WebSocket = require('ws');
 const { Hub } = require('../src/hub');
 const { Channel, VER_JSON, VER_TUN } = require('../src/wsenc');
 const { Session } = require('../src/tunnel');
+const lora = require('../src/lora');
 
 const W = process.env.SENSMOS_WEKTORY || path.join(__dirname, '..', '..', 'kontrakt', 'protokol', 'wektory');
 const V = JSON.parse(fs.readFileSync(path.join(W, 'ws-enc.json'), 'utf8'));
@@ -169,6 +170,19 @@ test('E2E: rejestracja, kanał, measure, parowanie, tunel', async () => {
         assert.deepStrictEqual(view.status.own.map(e => e.entity_id), ['own.ha_s_kuchnia_t']);
         assert.strictEqual(view.native.entities.find(e => e.entity_id === 'temp_in').value, '21.4');
         assert.strictEqual(hub.history.query({ hours: 1 }).length, 3, 'wysłane odczyty są też w historii lokalnej');
+
+        // LoRa: czujnik nadaje do Hubu (dst = id8), obcy nod słyszy, BE dowozi hex po WS → Hub dekoduje, kwit bez treści
+        const H = { Authorization: 'Bearer 123456', 'Content-Type': 'application/json' };
+        await fetch(`http://127.0.0.1:${lanPortHub}/node/lora_rx`, { method: 'POST', headers: H, body: JSON.stringify({ key: 'fraza e2e' }) });
+        be.send({ type: 'lora_frame', hex: lora.encode(hub.id.id.slice(0, 8), 3, 't=21.5;bat=90', lora.keyFromPhrase('fraza e2e')) });
+        const rc = await be.until('lora_data_rcpt');
+        assert.deepStrictEqual([rc.sub, rc.via, rc.len, rc.enc], [3, 'ws', 13, true]);
+        const inbox = await (await fetch(`http://127.0.0.1:${lanPortHub}/lora/inbox`, { headers: H })).json();
+        assert.strictEqual(inbox.frames.items[0].text, 't=21.5;bat=90');
+        const lsend = await (await fetch(`http://127.0.0.1:${lanPortHub}/node/lorasend`, { method: 'POST', headers: H, body: JSON.stringify({ dst: '0badc0de', sub: 1, payload: 'on' }) })).json();
+        assert.deepStrictEqual(lsend, { status: 'sent_ws' });
+        const ls = await be.until('lora_send');
+        assert.deepStrictEqual([ls.dst, ls.sub, lora.decode(ls.hex, '0badc0de', null, true).payload.toString()], ['0badc0de', 1, 'on']);
     } finally {
         hub.stop();
         lanSrv.close();

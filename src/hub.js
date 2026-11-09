@@ -15,9 +15,11 @@ const BE_PUB = require('./be_pub');
 const diag = require('./diag');
 const ha = require('./ha');
 const { History } = require('./history');
+const { Lora } = require('./lora');
+const { HaLora } = require('./ha_lora');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
-const QUIET = new Set(['cn_config', 'tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong']);
+const QUIET = new Set(['cn_config', 'tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong', 'lora_cfg', 'lora_scan', 'lora_camp', 'lora_listen', 'lora_cad', 'lora_hunt', 'lora_bg']);
 
 class Hub {
     constructor(cfg) {
@@ -35,6 +37,9 @@ class Hub {
         this.id = identity.load(this.cfg.data);
         this.pairing = new Pairing(this.cfg.data);
         this.pin = this.loadPin();
+        // Czujniki LoRa przez sieć (Hub nie ma radia): ramki DATA do Hubu dowozi BE, Hub dekoduje kluczem z frazy.
+        this.lora = new Lora({ dir: this.cfg.data, deviceId: this.id.id, log: this.log, send: o => this.send(o) });
+        if (this.cfg.loraKey) this.lora.configure({ key: this.cfg.loraKey });   // opcja dodatku / HUB_LORA_KEY
         this.registeredFile = path.join(this.cfg.data, 'registered.json');
         this.ws = null; this.chan = null; this.tunnels = null; this.stopping = false; this.backoffS = this.cfg.backoffS;
         this.seen = new Set();
@@ -56,18 +61,22 @@ class Hub {
     async start() {
         diag.writeState(this.cfg.data, { version: FIRMWARE });
         this.log(`Sensmos Hub ${FIRMWARE} — device_id ${this.id.id}`);
+        this.log(`LoRa: czujniki nadają do id ${this.lora.id8} (klucz ${this.lora.key ? 'ustawiony' : 'nieustawiony'}${this.lora.open ? ', jawne ramki przyjmowane' : ''})`);
         this.logLocal(`PIN hubu: ${this.pin} (apka pyta o niego przy parowaniu i eksporcie)`);
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: this.cfg.owner,
             sensors: () => this.ha?.snapshot() || null, shared: this.shared = new ha.Shared(this.cfg.data),
-            data: () => this.dataView(), history: this.history = new History(this.cfg.data, { log: this.log }),
+            data: () => this.dataView(), lora: this.lora, connected: () => !!this.chan, history: this.history = new History(this.cfg.data, { log: this.log }),
             log: this.log, onPairingChange: () => this.ws?.close() });
         await new Promise(r => this.lan.once('listening', r));
         // apka szuka noda po nazwie sensmos-<id>.local i mówi do portu 80 (jak do płytki)
         if (this.cfg.mdns !== false) this.mdns = mdns.start({ deviceId: this.id.id, port: this.lan.address().port, firmware: FIRMWARE, log: this.log });
         // Czujniki z Home Assistanta (tylko odczyt, lokalnie): add-on → API Supervisora, Docker → HUB_HA_URL + HUB_HA_TOKEN.
         const haCfg = this.cfg.ha || ha.config();
-        if (haCfg) this.ha = new ha.HaSensors({ cfg: haCfg, log: this.log, everyS: this.cfg.haEveryS || 60 }).start();
-        else this.log('HA: brak dostępu do Home Assistanta (Docker: HUB_HA_URL + HUB_HA_TOKEN w .env) — czujniki wyłączone');
+        if (haCfg) {
+            this.ha = new ha.HaSensors({ cfg: haCfg, log: this.log, everyS: this.cfg.haEveryS || 60 }).start();
+            // Ramki LoRa jako czujniki w HA (sensor.sensmos_lora_*), bez integracji z HACS. HUB_LORA_HA=0 wyłącza.
+            if (this.cfg.loraHa !== false) this.haLora = new HaLora({ cfg: haCfg, lora: this.lora, log: this.log, everyS: this.cfg.loraHaEveryS || 300 }).start();
+        } else this.log('HA: brak dostępu do Home Assistanta (Docker: HUB_HA_URL + HUB_HA_TOKEN w .env) — czujniki wyłączone');
         // Udostępnione czujniki co dataS: zapis do historii lokalnej zawsze, wysyłka do sieci gdy jest połączenie
         // (ten sam batch co ESP32, kanał szyfrowany, BE: onBatch → batch.js).
         this.dataT = setInterval(() => this.sendSensors(), (this.cfg.dataS || 300) * 1000);
@@ -83,6 +92,7 @@ class Hub {
         this.ws?.close();
         this.lan?.close();
         this.ha?.stop();
+        this.haLora?.stop();
         clearInterval(this.dataT);
         this.mdns?.stop();
         this.events.stop();
@@ -226,6 +236,11 @@ class Hub {
                 measure.run(m.jobs).then(recs => { if (recs.length) { this.send({ type: 'measure', v: 1, m: recs }); this.log(`measure: ${recs.length} rekordów`); } });
                 return;
             case 'tun_open': return this.tunnels.onOpen(m);
+            case 'lora_frame': this.lora.onWs(m.hex); return;
+            case 'lora_frame_tx':
+                // BE prosi bazę o nadanie radiem do jej czujnika — Hub radia nie ma.
+                if (!this.seen.has(m.type)) { this.seen.add(m.type); this.log('LoRa: ramka do nadania radiem odrzucona (Hub nie ma radia)'); }
+                return;
             case 'tun_close': return this.tunnels.onClose(m);
             case 'reboot': this.log('BE prosi o restart; łączę ponownie'); return this.ws.close();
             case 'deleted': return this.onIdentified({ status: 'deleted' });

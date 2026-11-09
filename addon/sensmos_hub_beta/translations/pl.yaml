@@ -12,3 +12,8 @@ configuration:
   port:
     name: Port w sieci lokalnej
     description: Port, na którym apka łączy się z nodem. Zostaw 80, chyba że zajmuje go inny dodatek.
+  lora_key:
+    name: Fraza klucza LoRa
+    description: >-
+      Ta sama fraza, którą ustawiasz w czujnikach LoRa. Hub odszyfrowuje nią ich ramki i pokazuje je
+      jako encje sensor.sensmos_lora_*. Opcjonalnie: można ją też ustawić w apce (karta Huba → LoRa).

@@ -1,6 +1,6 @@
 {
   "name": "sensmos-hub",
-  "version": "0.2.0-beta1",
+  "version": "0.2.0-beta2",
   "description": "Sensmos node without an ESP32: runs on a Raspberry Pi, NAS or server, speaks the node protocol and opens the Home Assistant tunnel.",
   "license": "MIT",
   "private": true,

@@ -9,6 +9,8 @@ const cfg = {
     port: parseInt(process.env.HUB_PORT) || 80,
     bePub: process.env.HUB_BE_PUB || undefined,
     pin: process.env.HUB_PIN || '',
+    loraKey: process.env.HUB_LORA_KEY || '',
+    loraHa: !/^(0|false|no|off)$/i.test(process.env.HUB_LORA_HA || ''),
 };
 
 // `diag`: paczka diagnostyczna z katalogu danych (działa też obok uruchomionego hubu).
