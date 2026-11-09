@@ -1,7 +1,7 @@
 name: Sensmos Hub
 version: "0.1.1"
 slug: sensmos_hub
-description: A Sensmos node without an ESP32. Pairs with the Sensmos app over LAN and opens the encrypted tunnel to this Home Assistant.
+description: "A Sensmos node without an ESP32. Pairs with the Sensmos app over LAN and opens the encrypted tunnel to this Home Assistant."
 url: https://github.com/sensmos-network/sensmos-hub
 arch:
   - aarch64
