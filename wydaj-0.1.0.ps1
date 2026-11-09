@@ -5,6 +5,8 @@ Write-Host "1/3 repo sensmos-network/sensmos-hub (publiczne) + push main" -Foreg
 gh repo create sensmos-network/sensmos-hub --public --source . --remote origin --push --description "Sensmos node without an ESP32: Docker image and Home Assistant add-on with the encrypted tunnel to your LAN"
 
 Write-Host "2/3 tag v0.1.0 -> GitHub Actions buduje obraz ghcr.io/sensmos-network/sensmos-hub (amd64/arm64/armv7)" -ForegroundColor Cyan
+npm test
+if ($LASTEXITCODE -ne 0) { throw "npm test nie przeszedl - bez tagu" }
 git tag v0.1.0
 git push origin v0.1.0
 
