@@ -1,0 +1,14 @@
+configuration:
+  owner:
+    name: Wallet address
+    description: >-
+      Your wallet address from the Sensmos app (Wallet screen, starts with 0x). The node is registered
+      to this wallet and its rewards go there.
+  pin:
+    name: PIN
+    description: >-
+      Six digits the app asks for when you pair the phone with this node. Leave empty and a random PIN
+      is written to the add-on log.
+  port:
+    name: LAN port
+    description: Port the app talks to on your network. Keep 80 unless another add-on uses it.

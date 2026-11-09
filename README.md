@@ -50,15 +50,17 @@ key (`tunel.md`); the server only forwards opaque frames. Only private addresses
 
 ## Home Assistant add-on
 
-The same hub as an add-on, for people who run Home Assistant OS or Supervised:
+The same hub as an add-on, for people who run Home Assistant OS or Supervised. One click adds the
+repository and opens the add-on:
 
-[![Add the repository to my Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsensmos-network%2Fsensmos-hub)
+[![Open the Sensmos Hub add-on in my Home Assistant](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=ea77c6f9_sensmos_hub&repository_url=https%3A%2F%2Fgithub.com%2Fsensmos-network%2Fsensmos-hub)
 
-1. Settings → Add-ons → Add-on store → ⋮ → **Repositories** → add `https://github.com/sensmos-network/sensmos-hub` (or use the button above).
-2. Install **Sensmos Hub**, fill in **owner** (wallet address) and optionally **pin**, start it.
-3. Pair from the app as above; the HA panel integration then points at this machine, port 8123.
+1. Press the button (or Settings → Add-ons → Add-on store → ⋮ → **Repositories** → add `https://github.com/sensmos-network/sensmos-hub`).
+2. **Install**, paste your wallet address from the Sensmos app into **Wallet address**, **Start**.
+3. Pair from the app as above (PIN in the add-on log); the HA panel integration then points at this machine, port 8123.
 
-Home Assistant builds the add-on image itself from this repository (`addon/sensmos_hub/`), with host networking.
+Step-by-step guide: https://sensmos.com/ha/ . Home Assistant builds the add-on image itself from this
+repository (`addon/sensmos_hub/`), with host networking.
 
 ## Test builds (beta)
 
@@ -125,7 +127,7 @@ as a physical node.
 Works: registration, encrypted channel, heartbeat, link measurements (icmp via `ping`, tcp, http, dns),
 pairing over LAN, tunnel v2 to private addresses.
 
-Not yet: traceroute jobs, LoRa, MQTT broker, local data history, Home Assistant add-on packaging.
+Not yet: traceroute jobs, LoRa, MQTT broker.
 
 ## Development
 

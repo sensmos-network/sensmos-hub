@@ -1,0 +1,14 @@
+configuration:
+  owner:
+    name: Adres portfela
+    description: >-
+      Adres portfela z apki Sensmos (ekran Portfel, zaczyna się od 0x). Nod rejestruje się na ten
+      portfel i tam trafiają nagrody.
+  pin:
+    name: PIN
+    description: >-
+      Sześć cyfr, o które apka pyta przy parowaniu telefonu z tym nodem. Puste pole = losowy PIN
+      w logu dodatku.
+  port:
+    name: Port w sieci lokalnej
+    description: Port, na którym apka łączy się z nodem. Zostaw 80, chyba że zajmuje go inny dodatek.
