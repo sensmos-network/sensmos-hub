@@ -38,10 +38,10 @@ async function fetchSensors(cfg, { timeoutMs = 8000 } = {}) {
         headers: { Authorization: `Bearer ${cfg.token}`, 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(timeoutMs),
     });
-    if (r.status === 401 || r.status === 403) throw new Error(`HA odrzucił token (${r.status})`);
-    if (!r.ok) throw new Error(`HA odpowiedział ${r.status}`);
+    if (r.status === 401 || r.status === 403) throw new Error(`HA rejected the token (${r.status})`);
+    if (!r.ok) throw new Error(`HA answered ${r.status}`);
     const states = await r.json();
-    if (!Array.isArray(states)) throw new Error('HA: odpowiedź bez listy stanów');
+    if (!Array.isArray(states)) throw new Error('HA: response without a list of states');
     return states.map(toSensor).filter(Boolean).sort((x, y) => x.entity_id.localeCompare(y.entity_id));
 }
 
@@ -60,11 +60,11 @@ class HaSensors {
             const sig = list.map(s => s.entity_id).join(',');
             if (this.error || sig !== this.lastSig) {
                 // Bez wartości i nazw: log trafia do paczki diagnostycznej, a czujniki nieudostępnione nie wychodzą z domu.
-                this.log(`HA (${this.cfg.via}): ${list.length} czujników`);
+                this.log(`HA (${this.cfg.via}): ${list.length} sensors`);
             }
             this.lastSig = sig; this.error = null;
         } catch (e) {
-            if (this.error !== e.message) this.log(`HA: ${e.message} — czujniki niedostępne, ponawiam co ${this.everyS} s`);
+            if (this.error !== e.message) this.log(`HA: ${e.message} — sensors unavailable, retrying every ${this.everyS} s`);
             this.error = e.message;
         }
         return this.sensors;

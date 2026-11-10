@@ -26,7 +26,7 @@ class Hub {
         this.cfg = { be: 'https://sensmos.com', port: 80, bePub: BE_PUB, pingS: 30, checkS: 600, backoffS: 5,
             ...Object.fromEntries(Object.entries(cfg).filter(([, v]) => v !== undefined && v !== '')) };
         this.cfg.be = this.cfg.be.replace(/\/$/, '');
-        if (!/^0x[0-9a-fA-F]{40}$/.test(this.cfg.owner || '')) throw new Error('HUB_OWNER: podaj adres portfela z apki Sensmos (0x…)');
+        if (!/^0x[0-9a-fA-F]{40}$/.test(this.cfg.owner || '')) throw new Error('HUB_OWNER: set the wallet address from the Sensmos app (0x…)');
         fs.mkdirSync(this.cfg.data, { recursive: true });
         // Każda linia logu trafia też do bufora zdarzeń na dysku (paczka diagnostyczna, `diag`).
         this.debug = this.cfg.debug === true || /^(debug|1|true)$/i.test(process.env.SENSMOS_LOG || '');
@@ -61,8 +61,8 @@ class Hub {
     async start() {
         diag.writeState(this.cfg.data, { version: FIRMWARE });
         this.log(`Sensmos Hub ${FIRMWARE} — device_id ${this.id.id}`);
-        this.log(`LoRa: czujniki nadają do id ${this.lora.id8} (klucz ${this.lora.key ? 'ustawiony' : 'nieustawiony'}${this.lora.open ? ', jawne ramki przyjmowane' : ''})`);
-        this.logLocal(`PIN hubu: ${this.pin} (apka pyta o niego przy parowaniu i eksporcie)`);
+        this.log(`LoRa: sensors send to id ${this.lora.id8} (key ${this.lora.key ? 'set' : 'not set'}${this.lora.open ? ', plain frames accepted' : ''})`);
+        this.logLocal(`Hub PIN: ${this.pin} (the app asks for it when pairing and exporting)`);
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: this.cfg.owner,
             sensors: () => this.ha?.snapshot() || null, shared: this.shared = new ha.Shared(this.cfg.data),
             data: () => this.dataView(), lora: this.lora, connected: () => !!this.chan, history: this.history = new History(this.cfg.data, { log: this.log }),
@@ -76,7 +76,7 @@ class Hub {
             this.ha = new ha.HaSensors({ cfg: haCfg, log: this.log, everyS: this.cfg.haEveryS || 60 }).start();
             // Ramki LoRa jako czujniki w HA (sensor.sensmos_lora_*), bez integracji z HACS. HUB_LORA_HA=0 wyłącza.
             if (this.cfg.loraHa !== false) this.haLora = new HaLora({ cfg: haCfg, lora: this.lora, log: this.log, everyS: this.cfg.loraHaEveryS || 300 }).start();
-        } else this.log('HA: brak dostępu do Home Assistanta (Docker: HUB_HA_URL + HUB_HA_TOKEN w .env) — czujniki wyłączone');
+        } else this.log('HA: no access to Home Assistant (Docker: HUB_HA_URL + HUB_HA_TOKEN in .env) — sensors off');
         // Udostępnione czujniki co dataS: zapis do historii lokalnej zawsze, wysyłka do sieci gdy jest połączenie
         // (ten sam batch co ESP32, kanał szyfrowany, BE: onBatch → batch.js).
         this.dataT = setInterval(() => this.sendSensors(), (this.cfg.dataS || 300) * 1000);
@@ -109,10 +109,10 @@ class Hub {
         const body = { message, pubkey: this.id.pubHex, sig_esp, proof: crypto.createHash('sha256').update(nonce + sig_esp + this.id.id).digest('hex') };
         const r = await fetch(`${this.cfg.be}/v1/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
         const txt = await r.text();
-        if (r.status === 403) throw new Error('ten hub jest już przypisany do innego portfela. Nowa tożsamość: usuń plik identity.json z katalogu danych.');
-        if (!r.ok) throw new Error(`rejestracja w BE nieudana (${r.status}): ${txt}`);
+        if (r.status === 403) throw new Error('this hub is already assigned to another wallet. For a new identity delete identity.json from the data folder.');
+        if (!r.ok) throw new Error(`registration with the backend failed (${r.status}): ${txt}`);
         fs.writeFileSync(this.registeredFile, JSON.stringify({ owner: this.cfg.owner.toLowerCase(), be: this.cfg.be, at: new Date().toISOString() }) + '\n');
-        this.log('zarejestrowany w BE; nod pojawi się w apce na liście nodów tego portfela');
+        this.log('registered with the backend; the node will show in the app on this wallet\'s node list');
         this.emit('registered');
     }
 
@@ -134,7 +134,7 @@ class Hub {
                 chip: `hub ${os.platform()}-${os.arch()} node${process.versions.node}`,
             }));
         });
-        ws.on('message', (data, isBinary) => { try { this.onMessage(data, isBinary); } catch (e) { this.log('błąd obsługi wiadomości:', e.message); } });
+        ws.on('message', (data, isBinary) => { try { this.onMessage(data, isBinary); } catch (e) { this.log('message handling error:', e.message); } });
         ws.on('error', e => this.log('WS:', e.message));
         ws.on('close', () => this.onClose());
     }
@@ -148,7 +148,7 @@ class Hub {
                 if (m.type === 'error') {
                     this.log('BE:', m.msg);
                     if (m.msg === 'device not registered') { try { fs.unlinkSync(this.registeredFile); } catch {} }
-                    if (m.msg === 'update_required') this.log(`BE wymaga proto ≥ ${m.proto_min}; zaktualizuj hub`);
+                    if (m.msg === 'update_required') this.log(`backend requires proto ≥ ${m.proto_min}; update the hub`);
                 }
                 return;
             }
@@ -168,7 +168,7 @@ class Hub {
             this.chan = null;
             this.emit('disconnected');
             if (this.stopping) return;
-            this.log(`rozłączony; ponowna próba za ${this.backoffS} s`);
+            this.log(`disconnected; retrying in ${this.backoffS} s`);
             this.retryT = setTimeout(() => this.register().then(() => this.connect()).catch(e => { this.log(e.message); this.retryT = setTimeout(() => this.connect(), this.backoffS * 1000); }), this.backoffS * 1000);
             this.backoffS = Math.min(this.backoffS * 2, 120);
         }
@@ -176,16 +176,16 @@ class Hub {
 
     onIdentified(m, hubNonce) {
         if (m.status === 'deleted') {
-            this.log('nod został usunięty z konta w apce. Zatrzymuję się; żeby dodać go ponownie, uruchom hub jeszcze raz.');
+            this.log('the node was removed from the account in the app. Stopping; to add it again, start the hub again.');
             try { fs.unlinkSync(this.registeredFile); } catch {}
             this.stop();
             this.emit('deleted');
             return;
         }
-        if (!m.enonce) { this.log('BE nie otworzył kanału szyfrowanego'); this.ws.close(); return; }
+        if (!m.enonce) { this.log('backend did not open the encrypted channel'); this.ws.close(); return; }
         this.chan = new Channel(this.id.ecdh, Buffer.from(this.cfg.bePub, 'hex'), hubNonce, Buffer.from(m.enonce, 'hex'));
         this.backoffS = this.cfg.backoffS;
-        this.log(`połączony z ${this.cfg.be} jako ${this.id.id.slice(0, 16)}… (${FIRMWARE}${this.pairing.has() ? ', sparowany' : ', niesparowany'})`);
+        this.log(`connected to ${this.cfg.be} as ${this.id.id.slice(0, 16)}… (${FIRMWARE}${this.pairing.has() ? ', paired' : ', not paired'})`);
         this.ping();
         this.pingT = setInterval(() => this.ping(), this.cfg.pingS * 1000);
         this.send({ type: 'check_assign' });
@@ -198,14 +198,14 @@ class Hub {
         const entities = ha.toEntities(this.ha.sensors, id => this.shared?.has(id));
         this.lastEntities = entities; this.lastAt = Math.floor(Date.now() / 1000);
         if (!entities.length) {
-            if (this.lastSent && this.chan) { this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities: [] }); this.log('czujniki do sieci: 0 (wycofane)'); }
+            if (this.lastSent && this.chan) { this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities: [] }); this.log('sensors to network: 0 (withdrawn)'); }
             this.lastSent = 0;
             return 0;
         }
         this.history?.append(entities, this.lastAt);
         if (!this.chan) return 0;
         this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities });
-        if (this.lastSent !== entities.length) this.log(`czujniki do sieci: ${entities.length} (${entities.map(e => e.entity_id).join(', ')})`);
+        if (this.lastSent !== entities.length) this.log(`sensors to network: ${entities.length} (${entities.map(e => e.entity_id).join(', ')})`);
         this.lastSent = entities.length;
         return entities.length;
     }
@@ -233,22 +233,22 @@ class Hub {
         if (this.debug && m.type !== 'check_jobs') this.log('BE →', m.type);
         switch (m.type) {
             case 'check_jobs':
-                measure.run(m.jobs).then(recs => { if (recs.length) { this.send({ type: 'measure', v: 1, m: recs }); this.log(`measure: ${recs.length} rekordów`); } });
+                measure.run(m.jobs).then(recs => { if (recs.length) { this.send({ type: 'measure', v: 1, m: recs }); this.log(`measure: ${recs.length} records`); } });
                 return;
             case 'tun_open': return this.tunnels.onOpen(m);
             case 'lora_frame': this.lora.onWs(m.hex); return;
             case 'lora_frame_tx':
                 // BE prosi bazę o nadanie radiem do jej czujnika — Hub radia nie ma.
-                if (!this.seen.has(m.type)) { this.seen.add(m.type); this.log('LoRa: ramka do nadania radiem odrzucona (Hub nie ma radia)'); }
+                if (!this.seen.has(m.type)) { this.seen.add(m.type); this.log('LoRa: frame to transmit by radio refused (the hub has no radio)'); }
                 return;
             case 'tun_close': return this.tunnels.onClose(m);
-            case 'reboot': this.log('BE prosi o restart; łączę ponownie'); return this.ws.close();
+            case 'reboot': this.log('backend asks for a restart; reconnecting'); return this.ws.close();
             case 'deleted': return this.onIdentified({ status: 'deleted' });
-            case 'ota': this.log('OTA nie dotyczy hubu (aktualizacja = nowy obraz Dockera)'); return;
-            case 'message': this.log('wiadomość:', JSON.stringify(m).slice(0, 200)); return;
+            case 'ota': this.log('OTA does not apply to the hub (update = new Docker image)'); return;
+            case 'message': this.log('message:', JSON.stringify(m).slice(0, 200)); return;
             default:
                 if (this.debug) this.log('BE →', m.type, JSON.stringify(m).slice(0, 300));
-                else if (!QUIET.has(m.type) && !this.seen.has(m.type)) { this.seen.add(m.type); this.log('nieobsługiwany typ z BE:', m.type); }
+                else if (!QUIET.has(m.type) && !this.seen.has(m.type)) { this.seen.add(m.type); this.log('unhandled type from backend:', m.type); }
         }
     }
 }

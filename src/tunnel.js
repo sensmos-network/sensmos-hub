@@ -96,7 +96,7 @@ class Tunnels {
 
     onOpen(m) {
         const tid = m.tid | 0, ip = String(m.ip || ''), port = m.port | 0, ts = m.ts | 0;
-        const deny = why => { this.state(tid, 'error', why); this.log(`tun_open odrzucony: ${why}`); };
+        const deny = why => { this.state(tid, 'error', why); this.log(`tun_open refused: ${why}`); };
         if (!this.pairing.has()) return deny('node not paired');
         if ((m.v | 0) !== 2) return deny('update the app');
         if (typeof m.proof !== 'string' || m.proof.length !== 64) return deny('missing proof');

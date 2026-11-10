@@ -56,7 +56,7 @@ function build({ dir, identity, firmware, cfg, pairingCount, scenario = null, ex
         process_alive: state.pid ? isAlive(state.pid) : null,
         config: { be: cfg.be, port: cfg.port, owner: cfg.owner, mdns: cfg.mdns !== false, paired_phones: pairingCount, registered_at: registered?.at || null },
         events,
-        errors: events.filter(e => /błąd|error|odrzucony|nieudana|rozłączony/i.test(e.m)).slice(-50),
+        errors: events.filter(e => /błąd|error|odrzucony|nieudana|rozłączony|refused|rejected|failed|disconnected/i.test(e.m)).slice(-50),
         metrics: { freemem: os.freemem(), loadavg: os.loadavg(), ...extra },
         created_at: new Date().toISOString(),
     };

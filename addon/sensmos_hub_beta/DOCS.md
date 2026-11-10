@@ -18,7 +18,7 @@ or give one of them another port.
 ## LoRa sensors without a radio (from 0.2.0-beta2)
 
 The hub has no radio, but your LoRa sensors can still report to this Home Assistant. A sensor sends its
-DATA frames to the hub's id (the 8 characters in the log line `LoRa: czujniki nadają do id …`), any Sensmos
+DATA frames to the hub's id (the 8 characters in the log line `LoRa: sensors send to id …`), any Sensmos
 node within radio range hears them, and the network delivers them to the hub over the internet. The
 frames stay encrypted on the way: only the hub, with your key phrase, can read them.
 

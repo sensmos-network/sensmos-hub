@@ -53,7 +53,8 @@
         "package": true,
         "version_prefix": "hub-0.1",
         "events_any": [
-          "połączony z"
+          "połączony z",
+          "connected to"
         ]
       }
     },
@@ -110,7 +111,8 @@
         "package": true,
         "version_prefix": "hub-0.1",
         "events_any": [
-          "połączony z"
+          "połączony z",
+          "connected to"
         ]
       }
     },
@@ -530,27 +532,27 @@
       "steps": {
         "en": [
           "Run Sensmos Hub 0.2.0-beta1 (beta add-on works on its own; Docker needs HUB_HA_URL and HUB_HA_TOKEN in .env).",
-          "Check the hub log for the line `HA (…): N czujników` listing your sensors.",
+          "Check the hub log for the line `HA (…): N sensors` listing your sensors.",
           "In the app (beta 1.6.5) open the hub's card → Hub sensors, tick at least one sensor and save.",
-          "Wait 5 minutes for the log line `czujniki do sieci`, then send the package with `--scenario hub-020-sensors --result ok`."
+          "Wait 5 minutes for the log line `sensors to network`, then send the package with `--scenario hub-020-sensors --result ok`."
         ],
         "pl": [
           "Uruchom Sensmos Hub 0.2.0-beta1 (dodatek beta działa sam; w Dockerze ustaw HUB_HA_URL i HUB_HA_TOKEN w .env).",
-          "Sprawdź w logu Huba linię `HA (…): N czujników` z listą Twoich czujników.",
+          "Sprawdź w logu Huba linię `HA (…): N sensors` z listą Twoich czujników.",
           "W apce (beta 1.6.5) otwórz kartę Huba → Czujniki Huba, zaznacz co najmniej jeden czujnik i zapisz.",
-          "Poczekaj 5 minut na linię `czujniki do sieci` w logu i wyślij paczkę z `--scenario hub-020-sensors --result ok`."
+          "Poczekaj 5 minut na linię `sensors to network` w logu i wyślij paczkę z `--scenario hub-020-sensors --result ok`."
         ],
         "de": [
           "Starte Sensmos Hub 0.2.0-beta1 (das Beta-Add-on funktioniert von selbst; in Docker HUB_HA_URL und HUB_HA_TOKEN in .env setzen).",
-          "Prüfe im Hub-Log die Zeile `HA (…): N czujników` mit deinen Sensoren.",
+          "Prüfe im Hub-Log die Zeile `HA (…): N sensors` mit deinen Sensoren.",
           "Öffne in der App (Beta 1.6.5) die Karte des Hubs → Hub-Sensoren, markiere mindestens einen Sensor und speichere.",
-          "Warte 5 Minuten auf die Log-Zeile `czujniki do sieci` und sende dann das Paket mit `--scenario hub-020-sensors --result ok`."
+          "Warte 5 Minuten auf die Log-Zeile `sensors to network` und sende dann das Paket mit `--scenario hub-020-sensors --result ok`."
         ],
         "pt": [
           "Rode o Sensmos Hub 0.2.0-beta1 (o add-on beta funciona sozinho; no Docker defina HUB_HA_URL e HUB_HA_TOKEN no .env).",
-          "Confira no log do hub a linha `HA (…): N czujników` com seus sensores.",
+          "Confira no log do hub a linha `HA (…): N sensors` com seus sensores.",
           "No app (beta 1.6.5) abra o cartão do hub → Sensores do hub, marque pelo menos um sensor e salve.",
-          "Espere 5 minutos pela linha `czujniki do sieci` no log e envie o pacote com `--scenario hub-020-sensors --result ok`."
+          "Espere 5 minutos pela linha `sensors to network` no log e envie o pacote com `--scenario hub-020-sensors --result ok`."
         ]
       },
       "expected": {
@@ -564,7 +566,8 @@
         "package": true,
         "version_prefix": "hub-0.2",
         "events_any": [
-          "czujniki do sieci"
+          "czujniki do sieci",
+          "sensors to network"
         ]
       }
     },
@@ -587,41 +590,42 @@
       "steps": {
         "en": [
           "Run Sensmos Hub 0.2.0-beta2 (beta add-on, or Docker with HUB_HA_URL and HUB_HA_TOKEN in .env).",
-          "Note the hub id from the log line `LoRa: czujniki nadają do id …` (8 characters) and set a key phrase: add-on option lora_key, HUB_LORA_KEY, or the app (hub card → LoRa).",
+          "Note the hub id from the log line `LoRa: sensors send to id …` (8 characters) and set a key phrase: add-on option lora_key, HUB_LORA_KEY, or the app (hub card → LoRa).",
           "Send a frame to that id with the same phrase and AES on: from a Sensmos LoRa node in the app (node card → LoRa → Send, payload `t=21.5;h=40`), or from a second hub: `curl -H 'Authorization: Bearer <PIN>' -d '{\"dst\":\"<id>\",\"payload\":\"t=21.5;h=40\",\"aes\":true}' http://<second hub>/node/lorasend` (the second hub needs the same phrase).",
           "Check Home Assistant → Developer tools → States for sensor.sensmos_lora_0_t = 21.5, then send the package with `--scenario hub-020-lora --result ok`."
         ],
         "pl": [
           "Uruchom Sensmos Hub 0.2.0-beta2 (dodatek beta albo Docker z HUB_HA_URL i HUB_HA_TOKEN w .env).",
-          "Zapisz id Huba z linii logu `LoRa: czujniki nadają do id …` (8 znaków) i ustaw frazę klucza: opcja dodatku lora_key, HUB_LORA_KEY albo apka (karta Huba → LoRa).",
+          "Zapisz id Huba z linii logu `LoRa: sensors send to id …` (8 znaków) i ustaw frazę klucza: opcja dodatku lora_key, HUB_LORA_KEY albo apka (karta Huba → LoRa).",
           "Wyślij ramkę na to id z tą samą frazą i włączonym AES: z noda LoRa Sensmos w apce (karta noda → LoRa → Wyślij, treść `t=21.5;h=40`) albo z drugiego Huba: `curl -H 'Authorization: Bearer <PIN>' -d '{\"dst\":\"<id>\",\"payload\":\"t=21.5;h=40\",\"aes\":true}' http://<drugi hub>/node/lorasend` (drugi Hub musi mieć tę samą frazę).",
           "Sprawdź w Home Assistancie → Narzędzia deweloperskie → Stany, że sensor.sensmos_lora_0_t = 21.5, i wyślij paczkę z `--scenario hub-020-lora --result ok`."
         ],
         "de": [
           "Starte Sensmos Hub 0.2.0-beta2 (Beta-Add-on oder Docker mit HUB_HA_URL und HUB_HA_TOKEN in .env).",
-          "Notiere die Hub-ID aus der Log-Zeile `LoRa: czujniki nadają do id …` (8 Zeichen) und setze eine Schlüsselphrase: Add-on-Option lora_key, HUB_LORA_KEY oder die App (Hub-Karte → LoRa).",
+          "Notiere die Hub-ID aus der Log-Zeile `LoRa: sensors send to id …` (8 Zeichen) und setze eine Schlüsselphrase: Add-on-Option lora_key, HUB_LORA_KEY oder die App (Hub-Karte → LoRa).",
           "Sende einen Frame an diese ID mit derselben Phrase und AES an: von einem Sensmos-LoRa-Node in der App (Node-Karte → LoRa → Senden, Inhalt `t=21.5;h=40`) oder von einem zweiten Hub: `curl -H 'Authorization: Bearer <PIN>' -d '{\"dst\":\"<id>\",\"payload\":\"t=21.5;h=40\",\"aes\":true}' http://<zweiter Hub>/node/lorasend` (der zweite Hub braucht dieselbe Phrase).",
           "Prüfe in Home Assistant → Entwicklerwerkzeuge → Zustände, dass sensor.sensmos_lora_0_t = 21.5 ist, und sende dann das Paket mit `--scenario hub-020-lora --result ok`."
         ],
         "pt": [
           "Rode o Sensmos Hub 0.2.0-beta2 (add-on beta, ou Docker com HUB_HA_URL e HUB_HA_TOKEN no .env).",
-          "Anote o id do hub na linha de log `LoRa: czujniki nadają do id …` (8 caracteres) e defina uma frase-chave: opção lora_key do add-on, HUB_LORA_KEY ou o app (cartão do hub → LoRa).",
+          "Anote o id do hub na linha de log `LoRa: sensors send to id …` (8 caracteres) e defina uma frase-chave: opção lora_key do add-on, HUB_LORA_KEY ou o app (cartão do hub → LoRa).",
           "Envie um frame para esse id com a mesma frase e AES ligado: de um node LoRa Sensmos no app (cartão do node → LoRa → Enviar, conteúdo `t=21.5;h=40`) ou de um segundo hub: `curl -H 'Authorization: Bearer <PIN>' -d '{\"dst\":\"<id>\",\"payload\":\"t=21.5;h=40\",\"aes\":true}' http://<segundo hub>/node/lorasend` (o segundo hub precisa da mesma frase).",
           "Confira no Home Assistant → Ferramentas de desenvolvedor → Estados que sensor.sensmos_lora_0_t = 21.5 e envie o pacote com `--scenario hub-020-lora --result ok`."
         ]
       },
       "expected": {
-        "en": "sensor.sensmos_lora_0_t shows 21.5 °C in Home Assistant within a minute of sending; the hub log has `LoRa: ramka sub 0`.",
-        "pl": "sensor.sensmos_lora_0_t pokazuje 21,5 °C w Home Assistancie w ciągu minuty od wysłania; w logu Huba jest `LoRa: ramka sub 0`.",
-        "de": "sensor.sensmos_lora_0_t zeigt innerhalb einer Minute nach dem Senden 21,5 °C in Home Assistant; im Hub-Log steht `LoRa: ramka sub 0`.",
-        "pt": "sensor.sensmos_lora_0_t mostra 21,5 °C no Home Assistant em até um minuto após o envio; o log do hub tem `LoRa: ramka sub 0`."
+        "en": "sensor.sensmos_lora_0_t shows 21.5 °C in Home Assistant within a minute of sending; the hub log has `LoRa: frame sub 0`.",
+        "pl": "sensor.sensmos_lora_0_t pokazuje 21,5 °C w Home Assistancie w ciągu minuty od wysłania; w logu Huba jest `LoRa: frame sub 0`.",
+        "de": "sensor.sensmos_lora_0_t zeigt innerhalb einer Minute nach dem Senden 21,5 °C in Home Assistant; im Hub-Log steht `LoRa: frame sub 0`.",
+        "pt": "sensor.sensmos_lora_0_t mostra 21,5 °C no Home Assistant em até um minuto após o envio; o log do hub tem `LoRa: frame sub 0`."
       },
       "auto_check": {
         "component": "hub",
         "version_prefix": "hub-0.2",
         "package": true,
         "events_any": [
-          "LoRa: ramka sub"
+          "LoRa: ramka sub",
+          "LoRa: frame sub"
         ]
       }
     }

@@ -10,7 +10,7 @@ class History {
     constructor(dir, { keepS = KEEP_S, pruneEvery = 288, log = () => {} } = {}) {
         this.file = path.join(dir, 'history.jsonl');
         this.keepS = keepS; this.pruneEvery = pruneEvery; this.writes = 0; this.log = log;
-        try { if (fs.existsSync(this.file)) this.prune(); } catch (e) { this.log(`historia: ${e.message}`); }   // restart nie zeruje przycinania
+        try { if (fs.existsSync(this.file)) this.prune(); } catch (e) { this.log(`history: ${e.message}`); }   // restart nie zeruje przycinania
     }
 
     append(entities, now = Math.floor(Date.now() / 1000)) {
@@ -19,7 +19,7 @@ class History {
             const lines = entities.map(e => JSON.stringify({ t: now, e: e.entity_id, v: e.value, u: e.unit || '' })).join('\n') + '\n';
             fs.appendFileSync(this.file, lines);
             if (++this.writes % this.pruneEvery === 0) this.prune(now);
-        } catch (e) { this.log(`historia: zapis nieudany (${e.message})`); }   // pełny dysk / tylko do odczytu nie kładzie Huba
+        } catch (e) { this.log(`history: write failed (${e.message})`); }   // pełny dysk / tylko do odczytu nie kładzie Huba
     }
 
     rows() {

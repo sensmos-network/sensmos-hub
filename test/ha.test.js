@@ -41,7 +41,7 @@ test('fetchSensors: tylko sensor/binary_sensor z wartością, liczby jako liczby
         const t = list.find(s => s.entity_id === 'sensor.salon_temperatura');
         assert.deepStrictEqual([t.value, t.unit, t.device_class, t.name], [21.4, '°C', 'temperature', 'Salon temperatura']);
         assert.strictEqual(list.find(s => s.entity_id === 'binary_sensor.drzwi').value, true);
-        await assert.rejects(ha.fetchSensors({ url, token: 'zly' }), /odrzucił token \(401\)/);
+        await assert.rejects(ha.fetchSensors({ url, token: 'zly' }), /rejected the token \(401\)/);
     } finally { srv.close(); }
 });
 
@@ -52,10 +52,10 @@ test('HaSensors: log przy pierwszym odczycie i przy błędzie, cisza gdy nic si�
         const h = new ha.HaSensors({ cfg: { url, token: 'tok', via: 'token' }, log: m => logs.push(m) });
         await h.poll(); await h.poll();
         assert.strictEqual(logs.length, 1);
-        assert.strictEqual(logs[0], 'HA (token): 3 czujników', 'log bez nazw i wartości (trafia do paczki diag)');
+        assert.strictEqual(logs[0], 'HA (token): 3 sensors', 'log bez nazw i wartości (trafia do paczki diag)');
         h.cfg.token = 'zly'; await h.poll(); await h.poll();
         assert.strictEqual(logs.length, 2);
-        assert.match(logs[1], /odrzucił token/);
+        assert.match(logs[1], /rejected the token/);
         assert.strictEqual(h.snapshot().count, 3, 'ostatni dobry odczyt zostaje');
         h.cfg.token = 'tok'; await h.poll();
         assert.strictEqual(logs.length, 3, 'powrót po błędzie jest logowany');

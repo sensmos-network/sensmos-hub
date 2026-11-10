@@ -47,7 +47,7 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
         if (url === '/node/pair') {
             if (!checkPin(req, res)) return;
             if (req.method === 'GET') return json(res, 200, { keys: pairing.count() });
-            if (req.method === 'DELETE') { pairing.clear(); onPairingChange?.(); log('parowanie usunięte'); return json(res, 200, { status: 'ok', keys: 0 }); }
+            if (req.method === 'DELETE') { pairing.clear(); onPairingChange?.(); log('pairing removed'); return json(res, 200, { status: 'ok', keys: 0 }); }
             if (req.method === 'POST') {
                 const b = await body(req);
                 if (!b) return json(res, 400, { error: 'bad json' });
@@ -55,7 +55,7 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
                 if (!/^[0-9a-fA-F]{64}$/.test(hex)) return json(res, 400, { error: 'key must be 64 hex chars' });
                 if (!pairing.add(Buffer.from(hex, 'hex'))) return json(res, 400, { error: 'key rejected' });
                 onPairingChange?.();
-                log(`sparowano telefon (kluczy: ${pairing.count()})`);
+                log(`phone paired (keys: ${pairing.count()})`);
                 return json(res, 200, { status: 'ok', keys: pairing.count() });
             }
         }
@@ -86,7 +86,7 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
             if (!b || !Array.isArray(b.shared)) return json(res, 400, { error: 'expected { shared: [entity_id, …] }' });
             let list;
             try { list = shared.set(b.shared); } catch (e) { return json(res, 500, { error: e.message }); }
-            log(`czujniki do udostępnienia: ${list.length}${list.length ? ' (' + list.slice(0, 8).join(', ') + (list.length > 8 ? ' …' : '') + ')' : ''}`);
+            log(`sensors to share: ${list.length}${list.length ? ' (' + list.slice(0, 8).join(', ') + (list.length > 8 ? ' …' : '') + ')' : ''}`);
             return json(res, 200, { status: 'ok', shared: list });
         }
         // Ceremonia LAN (nagrody Huba, BE /v1/attest/hub): apka w tej samej sieci przynosi seed z BE i pozycję
@@ -131,7 +131,7 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
         }
         json(res, 404, { error: 'not found' });
     });
-    server.listen(port, () => log(`LAN API na porcie ${port}`));
+    server.listen(port, () => log(`LAN API on port ${port}`));
     return server;
 }
 

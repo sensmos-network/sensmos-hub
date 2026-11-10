@@ -22,8 +22,8 @@ if (process.argv[2] === 'diag') {
     const pkg = build({ dir: cfg.data, identity, firmware: FIRMWARE, cfg, pairingCount: new Pairing(cfg.data).count(), scenario: arg('scenario') });
     if (!process.argv.includes('--upload')) { process.stdout.write(JSON.stringify(pkg, null, 2) + '\n'); process.exit(0); }
     upload({ be: cfg.be, identity, pkg, result: arg('result'), note: arg('note') })
-        .then(r => { console.log(`wysłano do ${cfg.be}: paczka #${r.id} (${JSON.stringify(pkg).length} B)`); process.exit(0); })
-        .catch(e => { console.error('wysyłka nieudana:', e.message); process.exit(1); });
+        .then(r => { console.log(`sent to ${cfg.be}: package #${r.id} (${JSON.stringify(pkg).length} B)`); process.exit(0); })
+        .catch(e => { console.error('upload failed:', e.message); process.exit(1); });
     return;
 }
 
@@ -31,7 +31,7 @@ let hub;
 try {
     hub = new Hub(cfg);
 } catch (e) {
-    console.error(e.message, '— np. HUB_OWNER=0x1234… w pliku .env');
+    console.error(e.message, '— e.g. HUB_OWNER=0x1234… in .env');
     process.exit(2);
 }
 hub.start();

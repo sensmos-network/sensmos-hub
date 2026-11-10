@@ -42,7 +42,7 @@ test('Lora: kwit, powtórka, ring, stan na dysku bez frazy', () => {
     const dir = tmp(), sent = [], logs = [];
     const lo = new L.Lora({ dir, deviceId: DEV, log: m => logs.push(m), send: o => sent.push(o) });
     assert.strictEqual(lo.onWs(V_AES, 1000), null, 'bez klucza nic');
-    assert.ok(logs.some(l => /nie ma klucza/.test(l)));
+    assert.ok(logs.some(l => /has no key/.test(l)));
     lo.configure({ key: 'fraza testowa' });
     const it = lo.onWs(V_AES, 1001);
     assert.deepStrictEqual(it, { ts: 1001, sub: 3, enc: true, via: 'ws', text: 't=21.5;h=40' });
@@ -128,7 +128,7 @@ test('HaLora: nowa ramka → stany i zdarzenie w HA, odnowienie po restarcie HA'
         assert.strictEqual(ha.got.length, 0, 'czujnik milczący > 7 dni nie jest odnawiany');
         const bad = new HaLora({ cfg: { url: ha.url, token: 'zly' }, lora: lo, log: m => logs.push(m) });
         assert.strictEqual(await bad.refresh(1001), false);
-        assert.ok(logs.some(l => /odrzucił token \(401\)/.test(l)));
+        assert.ok(logs.some(l => /rejected the token \(401\)/.test(l)));
     } finally { hl.stop(); ha.srv.close(); }
 });
 

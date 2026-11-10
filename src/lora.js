@@ -99,16 +99,16 @@ class Lora {
     save() {
         const j = { key: this.key ? this.key.toString('hex') : null, open: this.open, frames: this.frames, last: this.last };
         try { fs.writeFileSync(this.file, JSON.stringify(j) + '\n', { mode: 0o600 }); }
-        catch (e) { this.log('LoRa: nie zapisuję stanu:', e.message); }
+        catch (e) { this.log('LoRa: cannot save state:', e.message); }
     }
 
     // Jak POST /node/lora_rx w FW: key "" kasuje, pole pominięte = bez zmian.
     configure({ key, open } = {}) {
         if (typeof key === 'string') {
             this.key = key ? keyFromPhrase(key) : null;
-            this.log(`LoRa: klucz odbioru ramek ${this.key ? 'ustawiony' : 'skasowany'}`);
+            this.log(`LoRa: frame key ${this.key ? 'set' : 'cleared'}`);
         }
-        if (typeof open === 'boolean' && open !== this.open) { this.open = open; this.log(`LoRa: odbiór jawnych ramek ${open ? 'włączony' : 'wyłączony'}`); }
+        if (typeof open === 'boolean' && open !== this.open) { this.open = open; this.log(`LoRa: plain frames ${open ? 'accepted' : 'refused'}`); }
         this.save();
         return this.state();
     }
@@ -127,9 +127,9 @@ class Lora {
             // Log raz na przyczynę: zły klucz u czujnika potrafi przysyłać ramki co minutę.
             if (fr.err !== 'dst' && !this.drops[fr.err]) {
                 this.drops[fr.err] = 1;
-                const why = { no_key: 'ramka szyfrowana, a Hub nie ma klucza (apka → LoRa → Odbiór ramek)', open_off: 'ramka jawna, a odbiór jawnych jest wyłączony',
-                    crc_key: 'suma się nie zgadza — inny klucz w czujniku?', crc: 'suma się nie zgadza', len: 'zła długość', format: 'zły format', type: 'to nie ramka DATA' }[fr.err] || fr.err;
-                this.log(`LoRa: ramka odrzucona: ${why}`);
+                const why = { no_key: 'encrypted frame, but the hub has no key (app → LoRa → frame reception)', open_off: 'plain frame, but plain frames are refused',
+                    crc_key: 'checksum mismatch — different key in the sensor?', crc: 'checksum mismatch', len: 'bad length', format: 'bad format', type: 'not a DATA frame' }[fr.err] || fr.err;
+                this.log(`LoRa: frame refused: ${why}`);
             }
             return null;
         }
@@ -146,7 +146,7 @@ class Lora {
         // Kwit do BE (FW lora8): bez treści, BE wie tylko, że doszło (staty, podział ryczałtu RX).
         this.send({ type: 'lora_data_rcpt', sub: fr.sub, via: 'ws', len: fr.payload.length, enc: fr.enc, fh: fr.fh });
         // Bez treści w logu: log trafia do paczki diagnostycznej.
-        this.log(`LoRa: ramka sub ${fr.sub}, ${fr.payload.length} B${fr.enc ? ', AES' : ''}`);
+        this.log(`LoRa: frame sub ${fr.sub}, ${fr.payload.length} B${fr.enc ? ', AES' : ''}`);
         for (const fn of this.listeners) { try { fn(it); } catch (e) { this.log('LoRa:', e.message); } }
         return it;
     }
@@ -163,7 +163,7 @@ class Lora {
         if (!connected) return { error: 'no uplink (ws) for send' };
         const hex = encode(dst, sub, p, aes ? this.key : null);
         this.send({ type: 'lora_send', dst, sub, hex });
-        this.log(`LoRa: ramka do ${dst} sub ${sub} wysłana przez sieć (${p.length} B${aes ? ', AES' : ''})`);
+        this.log(`LoRa: frame to ${dst} sub ${sub} sent through the network (${p.length} B${aes ? ', AES' : ''})`);
         return { status: 'sent_ws' };
     }
 }

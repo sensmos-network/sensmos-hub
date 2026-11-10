@@ -67,21 +67,21 @@ class HaLora {
             headers: { Authorization: `Bearer ${this.cfg.token}`, 'Content-Type': 'application/json' },
             signal: AbortSignal.timeout(this.timeoutMs),
         });
-        if (r.status === 401 || r.status === 403) throw new Error(`HA odrzucił token (${r.status})`);
-        if (!r.ok) throw new Error(`HA odpowiedział ${r.status}`);
+        if (r.status === 401 || r.status === 403) throw new Error(`HA rejected the token (${r.status})`);
+        if (!r.ok) throw new Error(`HA answered ${r.status}`);
     }
 
     async write(it) {
         try {
             for (const s of toStates(it, { id8: this.lora.id8 })) {
                 await this.post('/api/states/' + s.entity_id, { state: s.state, attributes: s.attributes });
-                if (!this.written.has(s.entity_id)) { this.written.add(s.entity_id); this.log(`HA: czujnik LoRa ${s.entity_id}`); }
+                if (!this.written.has(s.entity_id)) { this.written.add(s.entity_id); this.log(`HA: LoRa sensor ${s.entity_id}`); }
             }
-            if (this.error) this.log('HA: zapis czujników LoRa znów działa');
+            if (this.error) this.log('HA: writing LoRa sensors works again');
             this.error = null;
             return true;
         } catch (e) {
-            if (this.error !== e.message) this.log(`HA: czujniki LoRa niezapisane: ${e.message}`);
+            if (this.error !== e.message) this.log(`HA: LoRa sensors not written: ${e.message}`);
             this.error = e.message;
             return false;
         }
@@ -93,7 +93,7 @@ class HaLora {
         if (!ok) return false;
         try {
             await this.post('/api/events/sensmos_lora_frame', { node_id: this.lora.deviceId, sub: it.sub, text: it.text ?? null, hex: it.hex ?? null, enc: !!it.enc, via: it.via, ts: it.ts });
-        } catch (e) { this.log(`HA: zdarzenie LoRa niewysłane: ${e.message}`); }
+        } catch (e) { this.log(`HA: LoRa event not sent: ${e.message}`); }
         return true;
     }
 

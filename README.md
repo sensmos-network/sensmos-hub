@@ -127,7 +127,7 @@ as a physical node.
 ## LoRa sensors in Home Assistant (from 0.2.0-beta2)
 
 The hub has no radio, yet LoRa sensors can report to it. A sensor sends DATA frames (`0xE0 0x02`) to the
-hub's id8, the first 8 characters of its device id (logged at start: `LoRa: czujniki nadają do id …`). Any
+hub's id8, the first 8 characters of its device id (logged at start: `LoRa: sensors send to id …`). Any
 Sensmos node within radio range hears the frame and the backend forwards it, still encrypted, to the hub
 over its WebSocket. The hub decrypts it with your key phrase exactly like an ESP32 base (AES-256-CTR, key =
 SHA-256 of the phrase) and sends back a receipt with metadata only. The backend never has the key.
