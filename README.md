@@ -5,7 +5,7 @@ to your wallet like a normal node, measures your home link and opens the encrypt
 Sensmos app to devices on your LAN, for example the Home Assistant panel, without port forwarding,
 VPN or a public IP.
 
-**Version 0.1, early.** It speaks the same protocol as the firmware (`kontrakt/protokol/`), so the
+**Stable 0.1.1, test builds 0.2.0-beta (see below).** It speaks the same protocol as the firmware (`kontrakt/protokol/`), so the
 backend and the app treat it as a node. It has no radio, so it does not relay LoRa frames; it is
 reported to the backend as kind `hub`. It can still receive your LoRa sensors through the network
 (from 0.2.0-beta2, see below).
@@ -65,7 +65,7 @@ repository (`addon/sensmos_hub/`), with host networking.
 
 ## Test builds (beta)
 
-Testers get new hub versions first. A test build is a tag like `v0.1.2-beta1`; the stable add-on and
+Testers get new hub versions first. A test build is a tag like `v0.2.0-beta3`; the stable add-on and
 the `main` instructions above move to it only after testers have checked it.
 
 - **Home Assistant:** in the same repository install **Sensmos Hub (beta)** instead of **Sensmos Hub**.
@@ -74,7 +74,7 @@ the `main` instructions above move to it only after testers have checked it.
 
 ```sh
 git fetch --tags
-git checkout v0.1.2-beta1        # the newest -beta tag; back to stable: git checkout main
+git checkout v0.2.0-beta3        # the newest -beta tag (git tag -l "*-beta*"); back to stable: git checkout main
 docker compose up -d --build
 ```
 
