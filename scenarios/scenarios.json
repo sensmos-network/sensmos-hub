@@ -514,6 +514,60 @@
       }
     },
     {
+      "id": "fw-113-deye",
+      "component": "fw",
+      "min_version": "1.13",
+      "hardware": {
+        "esp32": true
+      },
+      "points": 10,
+      "limit_testers": 10,
+      "ends_at": "2026-12-31T23:59:59Z",
+      "title": {
+        "en": "Firmware 1.13 beta: read a Deye or Sunsynk inverter over RS485",
+        "pl": "Firmware 1.13 beta: odczyt falownika Deye lub Sunsynk przez RS485",
+        "de": "Firmware 1.13 Beta: Deye- oder Sunsynk-Wechselrichter über RS485 auslesen",
+        "pt": "Firmware 1.13 beta: ler um inversor Deye ou Sunsynk via RS485"
+      },
+      "steps": {
+        "en": [
+          "You need a Deye or Sunsynk hybrid inverter, an RS485 adapter (for example a TTL-RS485 module) and a node on firmware 1.13. Connect A/B to the inverter's RS485 (Modbus) port and the adapter to the node's pins.",
+          "In the Sensmos app, on the same Wi-Fi as the node: open the node, then Modbus RS485. Pick the Deye/Sunsynk preset (1-phase or 3-phase LV), set the pins, turn polling on and save. The node only reads; it never writes to the inverter.",
+          "After a minute compare with the inverter's display or its own app: PV power, battery level, battery power and its sign (plus means charging, minus discharging), grid import and export, load. Note any error code the inverter shows.",
+          "Report the result: Works if the values match, Not working with a short description (which values differ, inverter model and its firmware)."
+        ],
+        "pl": [
+          "Potrzebujesz falownika hybrydowego Deye lub Sunsynk, adaptera RS485 (np. modułu TTL-RS485) i noda z firmware 1.13. Podłącz A/B do portu RS485 (Modbus) falownika, a adapter do pinów noda.",
+          "W apce Sensmos, w tej samej sieci Wi-Fi co nod: otwórz noda, potem Modbus RS485. Wybierz preset Deye/Sunsynk (1-fazowy albo 3-fazowy LV), ustaw piny, włącz odpytywanie i zapisz. Nod tylko czyta, nigdy nic nie zapisuje do falownika.",
+          "Po minucie porównaj z wyświetlaczem falownika albo jego aplikacją: moc PV, poziom baterii, moc baterii i jej znak (plus to ładowanie, minus rozładowanie), pobór i oddawanie do sieci, zużycie. Zanotuj kod błędu, jeśli falownik go pokazuje.",
+          "Zgłoś wynik: Działa, jeśli wartości się zgadzają, Nie działa z krótkim opisem (które wartości się różnią, model falownika i jego firmware)."
+        ],
+        "de": [
+          "Du brauchst einen Deye- oder Sunsynk-Hybridwechselrichter, einen RS485-Adapter (z. B. ein TTL-RS485-Modul) und einen Node mit Firmware 1.13. Verbinde A/B mit dem RS485-(Modbus-)Port des Wechselrichters und den Adapter mit den Pins des Nodes.",
+          "In der Sensmos-App im selben WLAN wie der Node: Node öffnen, dann Modbus RS485. Wähle das Deye/Sunsynk-Preset (1-phasig oder 3-phasig LV), setze die Pins, schalte das Abfragen ein und speichere. Der Node liest nur und schreibt nie in den Wechselrichter.",
+          "Vergleiche nach einer Minute mit dem Display des Wechselrichters oder seiner App: PV-Leistung, Akkustand, Akkuleistung und ihr Vorzeichen (plus = Laden, minus = Entladen), Netzbezug und Einspeisung, Verbrauch. Notiere einen eventuell angezeigten Fehlercode.",
+          "Melde das Ergebnis: Funktioniert, wenn die Werte stimmen, Funktioniert nicht mit kurzer Beschreibung (welche Werte abweichen, Modell und Firmware des Wechselrichters)."
+        ],
+        "pt": [
+          "Você precisa de um inversor híbrido Deye ou Sunsynk, um adaptador RS485 (por exemplo um módulo TTL-RS485) e um node com firmware 1.13. Ligue A/B à porta RS485 (Modbus) do inversor e o adaptador aos pinos do node.",
+          "No app Sensmos, na mesma rede Wi-Fi do node: abra o node e depois Modbus RS485. Escolha o preset Deye/Sunsynk (monofásico ou trifásico LV), defina os pinos, ligue a leitura e salve. O node só lê; nunca escreve no inversor.",
+          "Depois de um minuto compare com o display do inversor ou o app dele: potência FV, nível da bateria, potência da bateria e o sinal (mais é carga, menos é descarga), consumo e injeção na rede, carga. Anote o código de erro, se o inversor mostrar algum.",
+          "Informe o resultado: Funciona se os valores conferem, Não funciona com uma descrição curta (quais valores diferem, modelo e firmware do inversor)."
+        ]
+      },
+      "expected": {
+        "en": "The values in the app match the inverter's own readings; battery power is positive while charging.",
+        "pl": "Wartości w apce zgadzają się z odczytami falownika; moc baterii jest dodatnia przy ładowaniu.",
+        "de": "Die Werte in der App stimmen mit den Anzeigen des Wechselrichters überein; die Akkuleistung ist beim Laden positiv.",
+        "pt": "Os valores no app conferem com as leituras do inversor; a potência da bateria é positiva durante a carga."
+      },
+      "auto_check": {
+        "component": "fw",
+        "version_prefix": "1.13",
+        "device_online": true
+      }
+    },
+    {
       "id": "hub-020-confirm",
       "component": "hub",
       "min_version": "hub-0.2.0-beta1",
