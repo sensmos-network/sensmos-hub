@@ -10,10 +10,19 @@ or give one of them another port.
 
 ## Options
 
-- **owner**: the wallet address from the Sensmos app (Wallet screen), `0x…`.
+- **owner**: optional from 0.2.0-beta4. Leave it empty and add the hub from the app (below), or paste the wallet address from the Sensmos app (Wallet screen), `0x…`.
 - **pin**: six digits the app asks for when pairing. Leave empty for a random PIN (see the add-on log).
 - **port**: LAN port the app talks to when pairing (default 80).
 - **lora_key**: the key phrase of your LoRa sensors (optional, from 0.2.0-beta2). See below.
+
+## Adding the hub from the app, without the wallet address (from 0.2.0-beta4)
+
+1. Start the add-on with **owner** empty. Home Assistant shows a notification **Sensmos Hub is ready** with the PIN.
+2. With the phone on the same Wi-Fi, open the Sensmos app (1.6.7 or newer): **Nodes → Add → Search the network**, pick the hub and enter the PIN.
+3. The app assigns the hub to your wallet, the hub registers and connects, and the notification disappears.
+
+The assignment is kept in the add-on data. A hub that already has an owner refuses another wallet; to give it
+to someone else, remove the node from the account in the app and restart the add-on.
 
 ## LoRa sensors without a radio (from 0.2.0-beta2)
 

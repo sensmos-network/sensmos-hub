@@ -27,7 +27,7 @@ hub reward.
 ```sh
 git clone https://github.com/sensmos-network/sensmos-hub.git
 cd sensmos-hub
-cp .env.example .env        # put your wallet address in HUB_OWNER
+cp .env.example .env        # wallet address in HUB_OWNER, or leave it empty and add the hub from the app (0.2.0-beta4+)
 docker compose up -d
 docker compose logs -f      # shows the device_id and the PIN
 ```
@@ -37,6 +37,10 @@ port 80 like to an ESP32 node, the tunnel reaches your LAN, and `ping` measures 
 must be free on the host.
 
 After the first start the hub appears in the app on the node list of that wallet.
+
+**Without the wallet address (from 0.2.0-beta4):** leave `HUB_OWNER` empty. The hub waits on your LAN; in the app
+(1.6.7+) open **Nodes → Add → Search the network**, pick the hub and enter the PIN from the log. The app assigns it to
+your wallet (`POST /node/owner`, PIN, LAN only); the hub keeps it in `data/owner.json`, registers and connects.
 
 ## Pairing and the tunnel
 
@@ -99,6 +103,7 @@ docker compose exec hub node src/index.js diag --upload --scenario hub-install -
 | `identity.json` | the hub's key pair; delete it to get a new identity (a new node) |
 | `pairing.json` | pairing keys written by phones (up to 4) |
 | `pin.txt` | the PIN, when `HUB_PIN` is empty |
+| `owner.json` | wallet assigned from the app (when `HUB_OWNER` is empty) |
 | `registered.json` | marker that the hub registered with the backend for this wallet |
 | `shared.json` | which Home Assistant sensors you chose to share |
 | `lora.json` | LoRa: SHA-256 of the key phrase (never the phrase), plain-frames opt-in, last frames |

@@ -852,6 +852,63 @@
           "LoRa: frame sub"
         ]
       }
+    },
+    {
+      "id": "hub-020-owner",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta4",
+      "hardware": {
+        "hub": true,
+        "ha": true
+      },
+      "points": 3,
+      "limit_testers": 20,
+      "title": {
+        "en": "Add Sensmos Hub from the app without typing the wallet address",
+        "pl": "Dodaj Sensmos Hub z apki bez wpisywania adresu portfela",
+        "de": "Sensmos Hub aus der App hinzufügen, ohne die Wallet-Adresse einzutippen",
+        "pt": "Adicione o Sensmos Hub pelo app sem digitar o endereço da carteira"
+      },
+      "steps": {
+        "en": [
+          "Install the beta add-on Sensmos Hub 0.2.0-beta4 (or Docker with HUB_OWNER empty) and start it with the owner option empty.",
+          "In Home Assistant open the notification Sensmos Hub is ready and note the PIN (Docker: the PIN is in the log).",
+          "With the phone on the same Wi-Fi, in the Sensmos app 1.6.7 beta open Nodes → Add → Search the network, pick the hub and enter the PIN.",
+          "Check that the hub is on your node list in the app and that the notification is gone, then send the package with `--scenario hub-020-owner --result ok`."
+        ],
+        "pl": [
+          "Zainstaluj dodatek beta Sensmos Hub 0.2.0-beta4 (albo Docker z pustym HUB_OWNER) i uruchom go z pustą opcją owner.",
+          "W Home Assistancie otwórz powiadomienie Sensmos Hub is ready i zapisz PIN (Docker: PIN jest w logu).",
+          "Z telefonem w tym samym Wi-Fi w apce Sensmos 1.6.7 beta otwórz Nody → Dodaj → Szukaj w sieci, wybierz Huba i wpisz PIN.",
+          "Sprawdź, że Hub jest na liście Twoich nodów w apce, a powiadomienie zniknęło, i wyślij paczkę z `--scenario hub-020-owner --result ok`."
+        ],
+        "de": [
+          "Installiere das Beta-Add-on Sensmos Hub 0.2.0-beta4 (oder Docker mit leerem HUB_OWNER) und starte es mit leerer Option owner.",
+          "Öffne in Home Assistant die Benachrichtigung Sensmos Hub is ready und notiere die PIN (Docker: die PIN steht im Log).",
+          "Mit dem Handy im selben WLAN öffne in der Sensmos-App 1.6.7 Beta Nodes → Hinzufügen → Im Netz suchen, wähle den Hub und gib die PIN ein.",
+          "Prüfe, dass der Hub in der App auf deiner Node-Liste steht und die Benachrichtigung weg ist, dann sende das Paket mit `--scenario hub-020-owner --result ok`."
+        ],
+        "pt": [
+          "Instale o add-on beta Sensmos Hub 0.2.0-beta4 (ou Docker com HUB_OWNER vazio) e inicie-o com a opção owner vazia.",
+          "No Home Assistant abra a notificação Sensmos Hub is ready e anote o PIN (Docker: o PIN está no log).",
+          "Com o celular na mesma rede Wi-Fi, no app Sensmos 1.6.7 beta abra Nodes → Adicionar → Buscar na rede, escolha o hub e digite o PIN.",
+          "Verifique se o hub está na sua lista de nodes no app e se a notificação sumiu, e envie o pacote com `--scenario hub-020-owner --result ok`."
+        ]
+      },
+      "expected": {
+        "en": "The hub log has `owner set from the app` and then `connected to`; the hub shows on your node list.",
+        "pl": "W logu Huba jest `owner set from the app`, a potem `connected to`; Hub jest na liście Twoich nodów.",
+        "de": "Im Hub-Log steht `owner set from the app` und danach `connected to`; der Hub steht auf deiner Node-Liste.",
+        "pt": "O log do hub tem `owner set from the app` e depois `connected to`; o hub aparece na sua lista de nodes."
+      },
+      "auto_check": {
+        "component": "hub",
+        "version_prefix": "hub-0.2",
+        "package": true,
+        "events_any": [
+          "owner set from the app"
+        ]
+      }
     }
   ]
 }

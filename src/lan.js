@@ -6,7 +6,8 @@ const http = require('http');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
-function start({ port, pin, identity, pairing, firmware, owner, sensors, shared, data, history, lora, connected, log, onPairingChange }) {
+function start({ port, pin, identity, pairing, firmware, owner, onOwner, sensors, shared, data, history, lora, connected, log, onPairingChange }) {
+    const ownerOf = () => String((typeof owner === 'function' ? owner() : owner) || '').toLowerCase();
     const tries = new Map();   // adres → { fails, lockUntil }: blokada per nadawca, nie dla całego LAN-u
     const json = (res, code, obj) => {
         res.writeHead(code, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -38,11 +39,23 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
             return res.end();
         }
         if (url === '/' || url === '/info') {
-            return json(res, 200, { device_id: identity.id, firmware, hub: true, paired: pairing.has(), pubkey: identity.pubHex, ...(lora ? { lora: lora.info() } : {}) });
+            return json(res, 200, { device_id: identity.id, firmware, hub: true, paired: pairing.has(), owner_set: !!ownerOf(), pubkey: identity.pubHex, ...(lora ? { lora: lora.info() } : {}) });
         }
         if (url === '/config' && req.method === 'GET') {
             if (!checkPin(req, res)) return;
             return json(res, 200, { device_id: identity.id, firmware, hub: true, remote: pairing.has() });
+        }
+        // Przypisanie do portfela z apki (zamiast wpisywania adresu w dodatku): raz, za PIN-em, tylko po LAN.
+        if (url === '/node/owner') {
+            if (!checkPin(req, res)) return;
+            if (req.method === 'GET') return json(res, 200, { owner: ownerOf() || null });
+            if (req.method === 'POST') {
+                if (!onOwner) return json(res, 404, { error: 'not found' });
+                const b = await body(req);
+                if (!b) return json(res, 400, { error: 'bad json' });
+                const { code, ...r } = await onOwner(String(b.owner || ''));
+                return json(res, code, r);
+            }
         }
         if (url === '/node/pair') {
             if (!checkPin(req, res)) return;
@@ -98,7 +111,7 @@ function start({ port, pin, identity, pairing, firmware, owner, sensors, shared,
             const seed = String(b?.seed || ''), lat = String(b?.gps_lat ?? ''), lon = String(b?.gps_lon ?? '');
             if (!/^[0-9a-f]{64}$/.test(seed)) return json(res, 400, { error: 'seed must be 64 hex chars' });
             if (!/^-?\d{1,3}(\.\d{1,7})?$/.test(lat) || !/^-?\d{1,3}(\.\d{1,7})?$/.test(lon)) return json(res, 400, { error: 'gps_lat/gps_lon as decimal strings' });
-            const attest = `{"v":1,"kind":"hub","device_id":"${identity.id}","owner":"${String(owner || '').toLowerCase()}","seed":"${seed}","gps_lat":"${lat}","gps_lon":"${lon}"}`;
+            const attest = `{"v":1,"kind":"hub","device_id":"${identity.id}","owner":"${ownerOf()}","seed":"${seed}","gps_lat":"${lat}","gps_lon":"${lon}"}`;
             log('atest LAN podpisany dla apki (nagrody Huba)');
             return json(res, 200, { attest, sig: identity.sign(attest), device_id: identity.id });
         }

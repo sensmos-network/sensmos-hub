@@ -1,9 +1,10 @@
 configuration:
   owner:
-    name: Adres portfela
+    name: Adres portfela (opcjonalnie)
     description: >-
-      Adres portfela z apki Sensmos (ekran Portfel, zaczyna się od 0x). Nod rejestruje się na ten
-      portfel i tam trafiają nagrody.
+      Zostaw puste i dodaj Huba z apki Sensmos (Nody → Dodaj → Szukaj w sieci, PIN z powiadomienia
+      w Home Assistancie): apka sama przypisze go do Twojego portfela. Albo wklej adres portfela
+      (ekran Portfel, zaczyna się od 0x). Nod rejestruje się na ten portfel i tam trafiają nagrody.
   pin:
     name: PIN
     description: >-

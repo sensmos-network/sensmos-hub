@@ -135,4 +135,15 @@ function toEntities(sensors, isShared) {
     return out;
 }
 
-module.exports = { config, toSensor, fetchSensors, HaSensors, Shared, toEntities, NATIVE };
+// Powiadomienie w HA (persistent_notification) — PIN dla apki przy pierwszym starcie dodatku.
+async function callService(cfg, service, data, { timeoutMs = 8000 } = {}) {
+    const r = await fetch(`${cfg.url}/api/services/persistent_notification/${service}`, {
+        method: 'POST', headers: { Authorization: `Bearer ${cfg.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(data), signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!r.ok) throw new Error(`HA answered ${r.status}`);
+}
+const notify = (cfg, { notification_id, title, message }) => callService(cfg, 'create', { notification_id, title, message });
+const dismiss = (cfg, notification_id) => callService(cfg, 'dismiss', { notification_id });
+
+module.exports = { config, toSensor, fetchSensors, HaSensors, Shared, toEntities, NATIVE, notify, dismiss };

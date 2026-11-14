@@ -19,6 +19,7 @@ const { Lora } = require('./lora');
 const { HaLora } = require('./ha_lora');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
+const OWNER_RE = /^0x[0-9a-fA-F]{40}$/;
 const QUIET = new Set(['cn_config', 'tasks_update', 'tasks_clear', 'config_ack', 'batch_ack', 'monitor_set', 'monitor_clear', 'check_config', 'subscription_push', 'lora_msg_seed', 'fw_digest', 'pong', 'lora_cfg', 'lora_scan', 'lora_camp', 'lora_listen', 'lora_cad', 'lora_hunt', 'lora_bg']);
 
 class Hub {
@@ -26,8 +27,12 @@ class Hub {
         this.cfg = { be: 'https://sensmos.com', port: 80, bePub: BE_PUB, pingS: 30, checkS: 600, backoffS: 5,
             ...Object.fromEntries(Object.entries(cfg).filter(([, v]) => v !== undefined && v !== '')) };
         this.cfg.be = this.cfg.be.replace(/\/$/, '');
-        if (!/^0x[0-9a-fA-F]{40}$/.test(this.cfg.owner || '')) throw new Error('HUB_OWNER: set the wallet address from the Sensmos app (0x…)');
+        if (this.cfg.owner && !OWNER_RE.test(this.cfg.owner)) throw new Error('HUB_OWNER: wallet address from the Sensmos app (0x…) or empty');
         fs.mkdirSync(this.cfg.data, { recursive: true });
+        // Bez HUB_OWNER Hub czeka na przypisanie z apki (POST /node/owner po LAN z PIN-em) i pamięta je w owner.json.
+        this.ownerFile = path.join(this.cfg.data, 'owner.json');
+        this.ownerFromApp = false;
+        if (!this.cfg.owner) { try { const o = JSON.parse(fs.readFileSync(this.ownerFile, 'utf8')).owner; if (OWNER_RE.test(o || '')) { this.cfg.owner = o; this.ownerFromApp = true; } } catch {} }
         // Każda linia logu trafia też do bufora zdarzeń na dysku (paczka diagnostyczna, `diag`).
         this.debug = this.cfg.debug === true || /^(debug|1|true)$/i.test(process.env.SENSMOS_LOG || '');
         this.events = new diag.Events(this.cfg.data);
@@ -63,7 +68,7 @@ class Hub {
         this.log(`Sensmos Hub ${FIRMWARE} — device_id ${this.id.id}`);
         this.log(`LoRa: sensors send to id ${this.lora.id8} (key ${this.lora.key ? 'set' : 'not set'}${this.lora.open ? ', plain frames accepted' : ''})`);
         this.logLocal(`Hub PIN: ${this.pin} (the app asks for it when pairing and exporting)`);
-        this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: this.cfg.owner,
+        this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: () => this.cfg.owner || '', onOwner: o => this.setOwner(o),
             sensors: () => this.ha?.snapshot() || null, shared: this.shared = new ha.Shared(this.cfg.data),
             data: () => this.dataView(), lora: this.lora, connected: () => !!this.chan, history: this.history = new History(this.cfg.data, { log: this.log }),
             log: this.log, onPairingChange: () => this.ws?.close() });
@@ -80,9 +85,40 @@ class Hub {
         // Udostępnione czujniki co dataS: zapis do historii lokalnej zawsze, wysyłka do sieci gdy jest połączenie
         // (ten sam batch co ESP32, kanał szyfrowany, BE: onBatch → batch.js).
         this.dataT = setInterval(() => this.sendSensors(), (this.cfg.dataS || 300) * 1000);
+        if (!this.cfg.owner) { this.waitForOwner(haCfg); return this; }
         try { await this.register(); } catch (e) { this.log(e.message); }
         this.connect();
         return this;
+    }
+
+    // Hub bez właściciela: nie rejestruje się i nie łączy z siecią, dopóki apka go nie przypisze.
+    // W dodatku HA PIN trafia do powiadomienia (do logu dodatku też, tylko na konsolę).
+    waitForOwner(haCfg) {
+        this.log('no owner yet: in the Sensmos app open Nodes → Add → Search the network and pick this hub (PIN from the add-on notification or log)');
+        if (haCfg && this.cfg.notify !== false) ha.notify(haCfg, {
+            notification_id: 'sensmos_hub_pin',
+            title: 'Sensmos Hub is ready',
+            message: `Add it in the Sensmos app: **Nodes → Add → Search the network**, pick this hub and enter PIN **${this.pin}**. No wallet address to type.`,
+        }).catch(e => this.log('HA notification:', e.message));
+    }
+
+    // Przypisanie z apki (LAN, PIN sprawdzony w lan.js). Ten sam adres = nic do zrobienia; inny, gdy już jest = odmowa.
+    async setOwner(addr) {
+        if (!OWNER_RE.test(addr || '')) return { code: 400, error: 'owner must be 0x + 40 hex chars' };
+        if (this.cfg.owner) {
+            if (this.cfg.owner.toLowerCase() === addr.toLowerCase()) return { code: 200, status: 'ok', owner: this.cfg.owner.toLowerCase() };
+            return { code: 409, error: 'owner_set' };
+        }
+        this.cfg.owner = addr;
+        try { await this.register(); }
+        catch (e) { this.cfg.owner = ''; this.log(e.message); return { code: 502, error: e.message }; }
+        fs.writeFileSync(this.ownerFile, JSON.stringify({ owner: addr.toLowerCase(), at: new Date().toISOString() }) + '\n');
+        this.ownerFromApp = true;
+        this.log(`owner set from the app: ${addr.slice(0, 6)}…${addr.slice(-4)}`);
+        const haCfg = this.cfg.ha || ha.config();
+        if (haCfg && this.cfg.notify !== false) ha.dismiss(haCfg, 'sensmos_hub_pin').catch(() => {});
+        if (!this.ws) this.connect();
+        return { code: 200, status: 'ok', owner: addr.toLowerCase() };
     }
 
     stop() {
@@ -176,8 +212,12 @@ class Hub {
 
     onIdentified(m, hubNonce) {
         if (m.status === 'deleted') {
-            this.log('the node was removed from the account in the app. Stopping; to add it again, start the hub again.');
             try { fs.unlinkSync(this.registeredFile); } catch {}
+            // Przypisanie z apki znika razem z nodem: po restarcie Hub znów czeka na apkę (może to być inny portfel).
+            if (this.ownerFromApp) { try { fs.unlinkSync(this.ownerFile); } catch {} }
+            this.log(this.ownerFromApp
+                ? 'the node was removed from the account in the app. Stopping; restart the hub and add it again from the app.'
+                : 'the node was removed from the account in the app. Stopping; to add it again, start the hub again.');
             this.stop();
             this.emit('deleted');
             return;

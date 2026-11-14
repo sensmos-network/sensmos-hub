@@ -31,7 +31,7 @@ let hub;
 try {
     hub = new Hub(cfg);
 } catch (e) {
-    console.error(e.message, '— e.g. HUB_OWNER=0x1234… in .env');
+    console.error(e.message, '— HUB_OWNER=0x1234… in .env, or leave it empty and add the hub from the Sensmos app');
     process.exit(2);
 }
 hub.start();
