@@ -156,3 +156,15 @@ test('mapowanie per domena i jednostki: binarna bateria nie jest poziomem, °F �
     assert.ok(by['own.ha_s_cisn'] && !by['pub.pressure'], 'nieprzeliczalna jednostka nie trafia do natywnej');
     assert.ok(by['own.ha_s_door'] && by['own.ha_b_door'], 'sensor.x i binary_sensor.x bez kolizji');
 });
+
+test('poziom wody po nazwie i jednostce długości → pub.water_level w cm; bez jednostki długości zostaje own.*', () => {
+    const out = ha.toEntities([
+        { entity_id: 'sensor.potok_poziom_wody', name: 'Potok', value: 1.32, unit: 'm', device_class: 'distance' },
+        { entity_id: 'sensor.zbiornik', name: 'Wasserstand Zisterne', value: 870, unit: 'mm' },
+        { entity_id: 'sensor.water_level_pct', value: 40, unit: '%' },
+    ], () => true);
+    const by = Object.fromEntries(out.map(e => [e.entity_id, e]));
+    assert.deepStrictEqual([by['pub.water_level'].value, by['pub.water_level'].unit], [132, 'cm']);
+    assert.ok(by['own.ha_s_zbiornik'], 'drugi poziom wody nie nadpisuje pierwszego');
+    assert.ok(by['own.ha_s_water_level_pct'], 'procenty to nie poziom w cm');
+});

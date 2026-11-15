@@ -103,12 +103,15 @@ const NATIVE_SENSOR = {
 const NATIVE_BINARY = { door: 'door', garage_door: 'door', window: 'window', motion: 'motion', occupancy: 'presence', presence: 'presence' };
 const NATIVE = { ...NATIVE_SENSOR, ...NATIVE_BINARY };
 // Jednostka natywnej encji w sieci; inne jednostki przeliczamy albo (gdy się nie da) wysyłamy jako own.*.
-const UNIT = { temp_in: '°C', humidity_in: '%', pressure: 'hPa', co2: 'ppm', pm25: 'µg/m³', pm10: 'µg/m³', noise_db: 'dB', load_power: 'W', grid_v: 'V', batt_soc: '%' };
+const UNIT = { water_level: 'cm', temp_in: '°C', humidity_in: '%', pressure: 'hPa', co2: 'ppm', pm25: 'µg/m³', pm10: 'µg/m³', noise_db: 'dB', load_power: 'W', grid_v: 'V', batt_soc: '%' };
 const CONVERT = {
     '°F>°C': v => (v - 32) * 5 / 9, 'K>°C': v => v - 273.15, 'kPa>hPa': v => v * 10, 'Pa>hPa': v => v / 100, 'mbar>hPa': v => v,
     'inHg>hPa': v => v * 33.8639, 'psi>hPa': v => v * 68.9476, 'kW>W': v => v * 1000, 'mV>V': v => v / 1000, 'dBA>dB': v => v,
-    'μg/m³>µg/m³': v => v,
+    'μg/m³>µg/m³': v => v, 'm>cm': v => v * 100, 'mm>cm': v => v / 10,
 };
+// Poziom wody (alert sąsiedzki, roadmapa q3-automatyka-sasiedzka): HA nie ma na to device_class, więc poznajemy
+// go po nazwie czujnika w kilku językach i jednostce długości; trafia jako pub.water_level w cm.
+const WATER_LEVEL = /water[_ ]?level|poziom[_ ]?wody|wasserstand|pegel|nivel[_ ]?(da[_ ]?)?agua|nível[_ ]?(da[_ ]?)?água/i;
 function nativeValue(nat, s, value) {
     if (typeof value !== 'number') return null;
     const want = UNIT[nat];
@@ -125,7 +128,8 @@ function toEntities(sensors, isShared) {
         const value = typeof s.value === 'boolean' ? (s.value ? 1 : 0) : s.value;
         const ts = s.updated ? Math.floor(Date.parse(s.updated) / 1000) || 0 : 0;
         const [domain, obj] = s.entity_id.split('.');
-        const nat = (domain === 'binary_sensor' ? NATIVE_BINARY : NATIVE_SENSOR)[s.device_class];
+        const water = domain === 'sensor' && ['cm', 'm', 'mm'].includes(s.unit || '') && WATER_LEVEL.test(`${obj} ${s.name || ''}`);
+        const nat = water ? 'water_level' : (domain === 'binary_sensor' ? NATIVE_BINARY : NATIVE_SENSOR)[s.device_class];
         const nv = nat && !used.has(nat) ? nativeValue(nat, s, value) : null;
         if (nv) { used.add(nat); out.push({ entity_id: 'pub.' + nat, value: nv.value, unit: nv.unit, last_updated: ts }); continue; }
         // own.ha_s_<obj> / own.ha_b_<obj>: 48 znaków jak w BE (soft_data), domena w nazwie = bez kolizji

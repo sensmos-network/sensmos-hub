@@ -39,6 +39,8 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
   intervals, at least 1 hour). The hub then fires `sensmos_lora_silent`, and `sensmos_lora_back` when it returns.
 - Meter keys `kwh`, `m3` (or `water`) and `gas` are counters (`total_increasing`) that the Energy dashboard accepts;
   `w` and `kw` are power.
+- A shared sensor named like a water level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`) in cm, m or mm is
+  sent as `water_level` (cm) for the neighbourly water alert.
 - No HACS integration needed. If you also use the Sensmos integration with this hub, it shows the same
   frames as **LoRa DATA frame** sensors.
 
