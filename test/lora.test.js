@@ -223,6 +223,12 @@ test('LAN: /info.lora, /node/lora_rx, /lora/inbox, /node/lorasend, /node/lora_em
     } finally { srv.close(); }
 });
 
+test('toStates: soil = wilgotność gleby w %, kg = waga (szklarnia, pasieka)', () => {
+    const by = Object.fromEntries(toStates({ sub: 10, text: 'soil=34;t=18.5;kg=41.25' }).map(x => [x.entity_id, x.attributes]));
+    assert.deepStrictEqual([by['sensor.sensmos_lora_10_soil'].device_class, by['sensor.sensmos_lora_10_soil'].unit_of_measurement], ['moisture', '%']);
+    assert.deepStrictEqual([by['sensor.sensmos_lora_10_kg'].device_class, by['sensor.sensmos_lora_10_kg'].unit_of_measurement, by['sensor.sensmos_lora_10_kg'].state_class], ['weight', 'kg', 'measurement']);
+});
+
 test('toStates: liczniki (kwh, m3, gas) narastające do panelu Energia, moc chwilowa jako pomiar', () => {
     const s = toStates({ sub: 5, text: 'kwh=1234.567;w=830;m3=56.789;gas=12.3' });
     const by = Object.fromEntries(s.map(x => [x.entity_id, x.attributes]));

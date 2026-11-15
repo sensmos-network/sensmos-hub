@@ -15,6 +15,8 @@ const KEYS = {
     co2: ['carbon_dioxide', 'ppm'], lux: ['illuminance', 'lx'],
     pm25: ['pm25', 'µg/m³'], pm10: ['pm10', 'µg/m³'],
     rssi: ['signal_strength', 'dBm'],
+    // Ogród i pasieka: wilgotność gleby i waga (np. ul na belce tensometrycznej).
+    soil: ['moisture', '%'], kg: ['weight', 'kg'],
     // Liczniki z piwnicy (prąd, woda, gaz): stan narastający, więc HA bierze je do panelu Energia.
     // Spadek (restart płytki liczącej od zera) HA traktuje jako nowy cykl licznika, nie jako ujemne zużycie.
     w: ['power', 'W'], kw: ['power', 'kW'],

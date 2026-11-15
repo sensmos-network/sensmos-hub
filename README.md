@@ -155,6 +155,7 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   right device class and unit, so Home Assistant takes them straight into the **Energy** dashboard; `w`/`kw` are
   power. Recipe for an electricity meter (LED pulses) and a water meter (pulse output) in the basement:
   [sensmos-esphome](https://github.com/sensmos-network/sensmos-esphome#recipe-meters-in-the-basement).
+- **Garden and apiary (0.2.0-beta6):** `soil` becomes a moisture sensor in %, and `kg` a weight sensor (a beehive on a load cell).
 - **Water level for the neighbourly alert (0.2.0-beta6):** a shared Home Assistant sensor whose name says water
   level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`, `nível da água`) with a unit of cm, m or mm goes to
   the network as `water_level` in cm. Neighbours who turned on the water alert in the app get a notification when it
