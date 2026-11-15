@@ -967,6 +967,64 @@
         "version_prefix": "1.14",
         "device_online": true
       }
+    },
+    {
+      "id": "hub-020-silent",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta5",
+      "hardware": {
+        "hub": true,
+        "ha": true,
+        "lora": true
+      },
+      "points": 5,
+      "limit_testers": 10,
+      "title": {
+        "en": "Hub: alarm when a LoRa sensor goes silent",
+        "pl": "Hub: alarm, gdy czujnik LoRa zamilknie",
+        "de": "Hub: Alarm, wenn ein LoRa-Sensor verstummt",
+        "pt": "Hub: alarme quando um sensor LoRa fica em silêncio"
+      },
+      "steps": {
+        "en": [
+          "Install the beta add-on Sensmos Hub 0.2.0-beta5 and have one LoRa sensor that sends to the hub every few minutes (the sensmos_lora ESPHome component, or a second node with Send frame). One Sensmos node in range should be in Point mode.",
+          "In Home Assistant check that binary_sensor.sensmos_lora_<sub>_silent exists and is off.",
+          "Unplug the sensor and wait at least 1 hour (or 3 of its send intervals, whichever is longer). The entity turns on and the hub log shows `went silent`.",
+          "Plug the sensor back in. After its first frame the entity is off and the log shows `is back`. Send the package with `--scenario hub-020-silent --result ok`."
+        ],
+        "pl": [
+          "Zainstaluj dodatek beta Sensmos Hub 0.2.0-beta5 i miej jeden czujnik LoRa, który co kilka minut nadaje do Huba (komponent ESPHome sensmos_lora albo drugi nod z Wyślij ramkę). Jeden nod Sensmos w zasięgu powinien być w trybie Punkt.",
+          "W Home Assistancie sprawdź, że jest binary_sensor.sensmos_lora_<sub>_silent i ma stan off.",
+          "Odłącz czujnik od zasilania i poczekaj co najmniej godzinę (albo 3 jego odstępy nadawania, jeśli to dłużej). Encja przechodzi w on, a w logu Huba jest `went silent`.",
+          "Podłącz czujnik z powrotem. Po pierwszej ramce encja wraca na off, a w logu jest `is back`. Wyślij paczkę z `--scenario hub-020-silent --result ok`."
+        ],
+        "de": [
+          "Installiere das Beta-Add-on Sensmos Hub 0.2.0-beta5 und nutze einen LoRa-Sensor, der alle paar Minuten an den Hub sendet (ESPHome-Komponente sensmos_lora oder eine zweite Node mit Frame senden). Eine Sensmos-Node in Reichweite sollte im Punkt-Modus sein.",
+          "Prüfe in Home Assistant, dass binary_sensor.sensmos_lora_<sub>_silent existiert und off ist.",
+          "Trenne den Sensor vom Strom und warte mindestens 1 Stunde (oder 3 seiner Sendeintervalle, falls länger). Die Entität wird on und im Hub-Log steht `went silent`.",
+          "Schließe den Sensor wieder an. Nach seinem ersten Frame ist die Entität off und im Log steht `is back`. Sende das Paket mit `--scenario hub-020-silent --result ok`."
+        ],
+        "pt": [
+          "Instale o add-on beta Sensmos Hub 0.2.0-beta5 e tenha um sensor LoRa que envia ao hub a cada poucos minutos (componente ESPHome sensmos_lora ou um segundo node com Enviar frame). Um node Sensmos ao alcance deve estar no modo Ponto.",
+          "No Home Assistant verifique que binary_sensor.sensmos_lora_<sub>_silent existe e está off.",
+          "Desligue o sensor e espere pelo menos 1 hora (ou 3 intervalos de envio dele, se for mais). A entidade passa a on e o log do hub mostra `went silent`.",
+          "Ligue o sensor de novo. Depois do primeiro frame a entidade volta a off e o log mostra `is back`. Envie o pacote com `--scenario hub-020-silent --result ok`."
+        ]
+      },
+      "expected": {
+        "en": "The hub log has `went silent` and then `is back` for the same sensor; Home Assistant got the sensmos_lora_silent and sensmos_lora_back events.",
+        "pl": "W logu Huba jest `went silent`, a potem `is back` dla tego samego czujnika; Home Assistant dostał zdarzenia sensmos_lora_silent i sensmos_lora_back.",
+        "de": "Im Hub-Log steht `went silent` und danach `is back` für denselben Sensor; Home Assistant hat die Events sensmos_lora_silent und sensmos_lora_back bekommen.",
+        "pt": "O log do hub tem `went silent` e depois `is back` para o mesmo sensor; o Home Assistant recebeu os eventos sensmos_lora_silent e sensmos_lora_back."
+      },
+      "auto_check": {
+        "component": "hub",
+        "version_prefix": "hub-0.2",
+        "package": true,
+        "events_any": [
+          "went silent"
+        ]
+      }
     }
   ]
 }

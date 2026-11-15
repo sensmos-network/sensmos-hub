@@ -35,6 +35,8 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
 - Each sensor sub-address shows up as `sensor.sensmos_lora_<sub>`. A payload like `t=21.5;h=40;bat=87`
   also gives `sensor.sensmos_lora_<sub>_t`, `…_h`, `…_bat` with units (t °C, h %, p hPa, bat %, v V, co2 ppm, lux).
 - Every frame fires the `sensmos_lora_frame` event for automations.
+- `binary_sensor.sensmos_lora_<sub>_silent` turns on when a sensor stops sending (no frame for 3 of its usual
+  intervals, at least 1 hour). The hub then fires `sensmos_lora_silent`, and `sensmos_lora_back` when it returns.
 - No HACS integration needed. If you also use the Sensmos integration with this hub, it shows the same
   frames as **LoRa DATA frame** sensors.
 

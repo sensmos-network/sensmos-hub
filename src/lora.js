@@ -139,6 +139,10 @@ class Lora {
         if (prev !== undefined && now - prev < DEDUP_S) return null;
         delete this.drops.crc_key; delete this.drops.no_key;   // po poprawce klucza kolejny błąd znów trafi do logu
         const it = item(fr, now, 'ws');
+        // Odstęp od poprzedniej ramki tego czujnika: z niego Hub liczy, kiedy czujnik „zamilkł” (ha_lora).
+        const before = this.last[String(fr.sub)];
+        if (before && before.ts && now - before.ts >= 60) it.gap = now - before.ts;
+        else if (before && before.gap) it.gap = before.gap;
         this.frames.push(it);
         if (this.frames.length > RING) this.frames.splice(0, this.frames.length - RING);
         this.last[String(fr.sub)] = it;

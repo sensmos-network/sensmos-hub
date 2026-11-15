@@ -7,7 +7,7 @@ const http = require('http');
 const os = require('os');
 const path = require('path');
 const L = require('../src/lora');
-const { HaLora, toStates } = require('../src/ha_lora');
+const { HaLora, toStates, silentAfter } = require('../src/ha_lora');
 const lan = require('../src/lan');
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'hub-lora-'));
@@ -117,12 +117,13 @@ test('HaLora: nowa ramka → stany i zdarzenie w HA, odnowienie po restarcie HA'
         lo.onWs(V_AES, 1001);
         await new Promise(r => setTimeout(r, 200));
         const paths = ha.got.map(g => g.path);
-        assert.deepStrictEqual(paths, ['/api/states/sensor.sensmos_lora_3', '/api/states/sensor.sensmos_lora_3_t', '/api/states/sensor.sensmos_lora_3_h', '/api/events/sensmos_lora_frame']);
+        assert.deepStrictEqual(paths, ['/api/states/sensor.sensmos_lora_3', '/api/states/sensor.sensmos_lora_3_t', '/api/states/sensor.sensmos_lora_3_h', '/api/states/binary_sensor.sensmos_lora_3_silent', '/api/events/sensmos_lora_frame']);
         assert.strictEqual(ha.got[1].body.state, 21.5);
-        assert.deepStrictEqual(ha.got[3].body, { node_id: DEV, sub: 3, text: 't=21.5;h=40', hex: null, enc: true, via: 'ws', ts: 1001 });
+        assert.strictEqual(ha.got[3].body.state, 'off');
+        assert.deepStrictEqual(ha.got[4].body, { node_id: DEV, sub: 3, text: 't=21.5;h=40', hex: null, enc: true, via: 'ws', ts: 1001 });
         ha.got.length = 0;
-        assert.strictEqual(await hl.refresh(1001 + 3600), true);
-        assert.deepStrictEqual(ha.got.map(g => g.path), ['/api/states/sensor.sensmos_lora_3', '/api/states/sensor.sensmos_lora_3_t', '/api/states/sensor.sensmos_lora_3_h'], 'odnowienie bez zdarzenia');
+        assert.strictEqual(await hl.refresh(1001 + 1800), true);
+        assert.deepStrictEqual(ha.got.map(g => g.path), ['/api/states/sensor.sensmos_lora_3', '/api/states/sensor.sensmos_lora_3_t', '/api/states/sensor.sensmos_lora_3_h', '/api/states/binary_sensor.sensmos_lora_3_silent'], 'odnowienie bez zdarzenia');
         ha.got.length = 0;
         await hl.refresh(1001 + 8 * 86400);
         assert.strictEqual(ha.got.length, 0, 'czujnik milczący > 7 dni nie jest odnawiany');
@@ -130,6 +131,50 @@ test('HaLora: nowa ramka → stany i zdarzenie w HA, odnowienie po restarcie HA'
         assert.strictEqual(await bad.refresh(1001), false);
         assert.ok(logs.some(l => /rejected the token \(401\)/.test(l)));
     } finally { hl.stop(); ha.srv.close(); }
+});
+
+test('HaLora: czujnik zamilkł → binary_sensor on + jedno zdarzenie; powrót → sensmos_lora_back, także po restarcie Huba', async () => {
+    const ha = await fakeHa();
+    const dir = tmp();
+    const lo = new L.Lora({ dir, deviceId: DEV });
+    lo.configure({ key: 'fraza testowa' });
+    const hl = new HaLora({ cfg: { url: ha.url, token: 'tok' }, lora: lo, log: () => {}, everyS: 3600 });
+    lo.onFrame(it => { hl.onFrame(it); });
+    const T = 100000;
+    const frame = (t, txt) => L.encode('a1b2c3d4', 3, txt, L.keyFromPhrase('fraza testowa'), Buffer.from(String(t).padStart(8, '0').slice(-8), 'hex'));
+    const ev = () => ha.got.filter(g => g.path.startsWith('/api/events/sensmos_lora_s') || g.path.startsWith('/api/events/sensmos_lora_b'));
+    const silent = () => ha.got.filter(g => g.path === '/api/states/binary_sensor.sensmos_lora_3_silent').map(g => g.body.state);
+    try {
+        lo.onWs(frame(1, 'door=0'), T);
+        lo.onWs(frame(2, 'door=1'), T + 1200);                 // czujnik co 20 min → cisza po 1 h (minimum)
+        await new Promise(r => setTimeout(r, 150));
+        assert.strictEqual(lo.last['3'].gap, 1200);
+        ha.got.length = 0;
+        await hl.refresh(T + 1200 + 3000);
+        assert.deepStrictEqual([silent(), ev().length], [['off'], 0], '50 min ciszy to jeszcze nie alarm');
+        ha.got.length = 0;
+        await hl.refresh(T + 1200 + 3700);
+        assert.deepStrictEqual(silent(), ['on']);
+        assert.deepStrictEqual(ev().map(e => [e.path, e.body.sub, e.body.silent_s]), [['/api/events/sensmos_lora_silent', 3, 3700]]);
+        ha.got.length = 0;
+        await hl.refresh(T + 1200 + 7200);
+        assert.strictEqual(ev().length, 0, 'jedno zdarzenie na ciszę');
+        // restart Huba: znacznik z lora.json, bez drugiego zdarzenia ciszy
+        const lo2 = new L.Lora({ dir, deviceId: DEV });
+        lo2.configure({ key: 'fraza testowa' });
+        const hl2 = new HaLora({ cfg: { url: ha.url, token: 'tok' }, lora: lo2, log: () => {}, everyS: 3600 });
+        lo2.onFrame(it => { hl2.onFrame(it); });
+        ha.got.length = 0;
+        await hl2.refresh(T + 1200 + 9000);
+        assert.deepStrictEqual([silent(), ev().length], [['on'], 0]);
+        lo2.onWs(frame(3, 'door=0'), T + 1200 + 9600);
+        await new Promise(r => setTimeout(r, 150));
+        assert.deepStrictEqual(silent(), ['on', 'off']);
+        assert.deepStrictEqual(ev().map(e => [e.path, e.body.silent_s]), [['/api/events/sensmos_lora_back', 9600]]);
+        assert.strictEqual(silentAfter({ gap: 600 }), 3600);
+        assert.strictEqual(silentAfter({ gap: 6 * 3600 }), 18 * 3600);
+        assert.strictEqual(silentAfter({ gap: 86400 }), 2 * 86400, 'najwyżej 2 doby');
+    } finally { ha.srv.close(); }
 });
 
 test('LAN: /info.lora, /node/lora_rx, /lora/inbox, /node/lorasend, /node/lora_emerg', async () => {

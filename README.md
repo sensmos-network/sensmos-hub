@@ -145,6 +145,11 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   `bat`/`batt` %, `v`/`vbat` V, `co2` ppm, `lux` lx, `pm25`/`pm10` µg/m³; other keys without a unit. Every
   frame also fires the `sensmos_lora_frame` event. The hub rewrites the states every 5 minutes, so they come
   back after a Home Assistant restart. Docker needs `HUB_HA_URL` + `HUB_HA_TOKEN`; `HUB_LORA_HA=0` turns it off.
+- **Sensor went silent:** each sub-address also gets `binary_sensor.sensmos_lora_<sub>_silent` (device class
+  `problem`). It turns `on` when no frame came for 3 of the sensor's usual intervals (at least 1 hour, at most
+  2 days), and the hub fires `sensmos_lora_silent` once, then `sensmos_lora_back` on the next frame. Good for a
+  garage or allotment guard: a dead battery or a removed board raises an alarm too. Recipe:
+  [sensmos-esphome](https://github.com/sensmos-network/sensmos-esphome#recipe-garage--allotment-guard).
 - **Same API as a board:** `/info` carries a `lora` field, and `/lora/inbox`, `/node/lora_rx`,
   `/node/lora_emerg` answer like the firmware, so the app's LoRa screen and the Sensmos integration for HA
   (LoRa DATA frame sensors) work with the hub too. `/node/lorasend` sends a frame through the network
