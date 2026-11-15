@@ -41,6 +41,8 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
   `w` and `kw` are power.
 - A shared sensor named like a water level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`) in cm, m or mm is
   sent as `water_level` (cm) for the neighbourly water alert.
+- Meshtastic positions on the HA map: list your own or family nodes in **meshtastic_track** (`!7efeee00, …`);
+  only they get `sensor.meshtastic_<id>_where` with latitude/longitude. Other nodes' positions are never kept.
 - Meshtastic bridge: an automation with an MQTT trigger on `msh/+/2/json/#` that calls a `rest_command` posting the
   payload to `http://127.0.0.1:80/meshtastic` with `Authorization: Bearer <hub PIN>` gives you `sensor.meshtastic_*`
   and the `sensmos_meshtastic_message` event. The hub only listens; it never transmits. Full example in the README.

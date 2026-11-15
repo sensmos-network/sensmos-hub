@@ -165,7 +165,10 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   anything. Turn on MQTT with **JSON enabled** on a Meshtastic node with Wi-Fi and point it at the Home Assistant
   broker, then add the automation below. Every text message becomes `sensor.meshtastic_<id>` and the event
   `sensmos_meshtastic_message` (`node`, `name`, `text`, `channel`, `rssi`, `snr`); telemetry becomes
-  `sensor.meshtastic_<id>_t`, `_h`, `_p`, `_bat`, `_v`, `_lux`. Positions are not stored. `HUB_MESHTASTIC=0` turns it off.
+  `sensor.meshtastic_<id>_t`, `_h`, `_p`, `_bat`, `_v`, `_lux`, `_ma` (current), `_iaq`. Positions are stored only for
+  nodes you list in `HUB_MESHTASTIC_TRACK` (add-on: `meshtastic_track`, e.g. `!7efeee00, !7efeee01`, from 0.2.0-beta7):
+  your own and your family's, with their consent. Each gets `sensor.meshtastic_<id>_where` with `latitude` and
+  `longitude`, so the HA map card shows it. Positions of every other node are dropped. `HUB_MESHTASTIC=0` turns the bridge off.
 
   ```yaml
   rest_command:

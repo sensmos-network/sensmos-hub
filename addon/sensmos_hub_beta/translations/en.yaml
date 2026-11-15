@@ -32,3 +32,8 @@ configuration:
       Optional. Boards that send with ESPHome's own packet_transport over sx126x on the Sensmos home channel, as
       name=sub:encryption, separated by ;, e.g. allotment-sensor=20:my-secret. Name = esphome name of the board,
       encryption = the packet_transport encryption string. Readings show up as sensor.sensmos_lora_<sub>_<id>.
+  meshtastic_track:
+    name: Meshtastic nodes on the map
+    description: >-
+      Optional. Ids of your own or your family's Meshtastic nodes, comma separated, e.g. !7efeee00. Only their
+      positions become sensor.meshtastic_<id>_where for the HA map; positions of other nodes are never kept.

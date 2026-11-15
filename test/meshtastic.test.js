@@ -71,3 +71,18 @@ test('LAN: POST /meshtastic tylko z PIN-em huba', async () => {
         assert.strictEqual(seen.length, 1);
     } finally { srv.close(); }
 });
+
+test('pozycja tylko dla nodów z listy track: _where z latitude/longitude dla mapy HA', () => {
+    const POS = { from: 2130636288, id: 21, type: 'position', timestamp: 1763200100, payload: { latitude_i: 502612345, longitude_i: 199376543, altitude: 312, sats_in_view: 9 } };
+    assert.strictEqual(parse(POS), null);
+    assert.strictEqual(parse(POS, ['00000001']), null);
+    const x = parse(POS, ['7efeee00']);
+    assert.deepStrictEqual(x.pos, { lat: 50.26123, lon: 19.93765, alt: 312, sats: 9 });
+    assert.strictEqual(parse({ ...POS, payload: { latitude_i: 0, longitude_i: 0 } }, ['7efeee00']), null);
+    const w = toStates({ id: '7efeee00', values: {}, pos: x.pos, pos_ts: 1763200100 }).find(s => s.entity_id === 'sensor.meshtastic_7efeee00_where');
+    assert.strictEqual(w.attributes.latitude, 50.26123);
+    assert.strictEqual(w.attributes.longitude, 19.93765);
+    const { parseTrack } = require('../src/meshtastic');
+    assert.deepStrictEqual(parseTrack('!7EFEEE00, 7efeee01;zle !7efeee00'), ['7efeee00', '7efeee01']);
+    assert.strictEqual(toStates({ id: 'a', values: { iaq: 40 } })[0].attributes.unit_of_measurement, undefined);
+});

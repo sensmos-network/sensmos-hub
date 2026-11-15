@@ -3,7 +3,9 @@
 // automatyzacja HA przekazuje każdą wiadomość na POST /meshtastic huba) i zamienia je na encje HA:
 //   sensor.meshtastic_<id>          ostatnia wiadomość tekstowa od noda (atrybuty: nazwa, kanał, rssi, snr)
 //   sensor.meshtastic_<id>_<klucz>  telemetria: temperatura, wilgotność, ciśnienie, bateria, napięcie, światło
-// oraz zdarzenie `sensmos_meshtastic_message` dla automatyzacji. Pozycji GPS celowo nie zapisujemy.
+//   sensor.meshtastic_<id>_where     pozycja GPS (latitude/longitude dla karty mapy HA), TYLKO dla nodów wpisanych
+//                                   w HUB_MESHTASTIC_TRACK / opcję meshtastic_track (własne i rodzinne, za zgodą)
+// oraz zdarzenie `sensmos_meshtastic_message` dla automatyzacji. Pozycji innych nodów celowo nie zapisujemy.
 // Ostatnie stany leżą w data/meshtastic.json i są odnawiane po restarcie HA (stany z API go nie przeżywają).
 const fs = require('fs');
 const path = require('path');
@@ -12,12 +14,24 @@ const KEYS = {
     temperature: ['temperature', '°C', 't'], relative_humidity: ['humidity', '%', 'h'],
     barometric_pressure: ['pressure', 'hPa', 'p'], battery_level: ['battery', '%', 'bat'],
     voltage: ['voltage', 'V', 'v'], lux: ['illuminance', 'lx', 'lux'],
+    current: ['current', 'mA', 'ma'], iaq: ['aqi', null, 'iaq'],
 };
+
+// "!7efeee00, 7EFEEE01" → ['7efeee00', '7efeee01'] (id noda Meshtastic jak w apce, z wykrzyknikiem albo bez).
+function parseTrack(s) {
+    const out = [];
+    for (const part of String(s || '').split(/[,;\s]+/)) {
+        const a = part.replace(/^!/, '').toLowerCase();
+        if (/^[0-9a-f]{8}$/.test(a) && !out.includes(a)) out.push(a);
+    }
+    return out.slice(0, 20);
+}
 const MAX_NODES = 100, SEEN_MAX = 500, TEXT_MAX = 240;
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
-// Wiadomość JSON z MQTT Meshtastic → { id, type, text?, values, name?, channel, rssi, snr, ts, packet } albo null.
-function parse(m) {
+// Wiadomość JSON z MQTT Meshtastic → { id, type, text?, values, name?, pos?, channel, rssi, snr, ts, packet } albo null.
+// Pozycja tylko dla nodów z `track`: cudzych lokalizacji Hub nie zbiera.
+function parse(m, track = []) {
     if (!m || typeof m !== 'object') return null;
     const from = Number(m.from);
     if (!Number.isInteger(from) || from < 0 || from > 0xffffffff) return null;
@@ -38,6 +52,12 @@ function parse(m) {
         const n = String(p.longname || p.shortname || '').trim().slice(0, 40);
         if (!n) return null;
         out.name = n;
+    } else if (out.type === 'position') {
+        if (!track.includes(id)) return null;
+        const lat = num(p.latitude_i) != null ? p.latitude_i / 1e7 : null, lon = num(p.longitude_i) != null ? p.longitude_i / 1e7 : null;
+        if (lat == null || lon == null || Math.abs(lat) > 90 || Math.abs(lon) > 180 || (lat === 0 && lon === 0)) return null;
+        out.pos = { lat: Math.round(lat * 1e5) / 1e5, lon: Math.round(lon * 1e5) / 1e5,
+            ...(num(p.altitude) != null ? { alt: p.altitude } : {}), ...(num(p.sats_in_view) != null ? { sats: p.sats_in_view } : {}) };
     } else return null;
     return out;
 }
@@ -50,16 +70,20 @@ function toStates(n) {
     const out = [];
     if (n.text != null) out.push({ entity_id: base, state: n.text.length > 255 ? n.text.slice(0, 254) + '…' : n.text,
         attributes: { ...common, friendly_name: label, icon: 'mdi:message-text', channel: n.channel ?? null, text_ts: n.text_ts || null } });
+    if (n.pos) out.push({ entity_id: `${base}_where`, state: `${n.pos.lat}, ${n.pos.lon}`,
+        attributes: { ...common, friendly_name: `${label} position`, icon: 'mdi:map-marker', latitude: n.pos.lat, longitude: n.pos.lon,
+            gps_accuracy: 30, ...(n.pos.alt != null ? { altitude: n.pos.alt } : {}), ...(n.pos.sats != null ? { sats: n.pos.sats } : {}), pos_ts: n.pos_ts || null } });
     for (const [k, v] of Object.entries(n.values || {})) {
         const [device_class, unit] = Object.values(KEYS).find(x => x[2] === k) || [];
         out.push({ entity_id: `${base}_${k}`, state: v,
-            attributes: { ...common, friendly_name: `${label} ${k}`, state_class: 'measurement', ...(device_class ? { device_class, unit_of_measurement: unit } : {}) } });
+            attributes: { ...common, friendly_name: `${label} ${k}`, state_class: 'measurement', ...(device_class ? { device_class } : {}), ...(unit ? { unit_of_measurement: unit } : {}) } });
     }
     return out;
 }
 
 class Meshtastic {
-    constructor({ dir, cfg, log, timeoutMs = 8000 }) {
+    constructor({ dir, cfg, log, timeoutMs = 8000, track = '' }) {
+        this.track = parseTrack(track);
         this.file = path.join(dir, 'meshtastic.json'); this.cfg = cfg; this.log = log || (() => {}); this.timeoutMs = timeoutMs;
         this.nodes = {}; this.seen = []; this.error = null;
         try { this.nodes = JSON.parse(fs.readFileSync(this.file, 'utf8')).nodes || {}; } catch {}
@@ -94,7 +118,7 @@ class Meshtastic {
 
     // Jedna wiadomość z MQTT. Ten sam pakiet usłyszany przez kilka bramek Meshtastic liczymy raz.
     async ingest(m) {
-        const x = parse(m);
+        const x = parse(m, this.track);
         if (!x) return { ok: false, ignored: true };
         if (x.packet) {
             if (this.seen.includes(x.packet)) return { ok: true, duplicate: true };
@@ -107,6 +131,7 @@ class Meshtastic {
         const n = this.nodes[x.id] || (this.nodes[x.id] = { id: x.id, values: {} });
         n.ts = x.ts; n.rssi = x.rssi; n.snr = x.snr;
         if (x.name) n.name = x.name;
+        if (x.pos) { n.pos = x.pos; n.pos_ts = x.ts; }
         if (x.text != null) { n.text = x.text; n.text_ts = x.ts; n.channel = x.channel; }
         Object.assign(n.values, x.values);
         this.save();
@@ -139,4 +164,4 @@ class Meshtastic {
     stop() { clearInterval(this.t); }
 }
 
-module.exports = { Meshtastic, parse, toStates };
+module.exports = { Meshtastic, parse, parseTrack, toStates };

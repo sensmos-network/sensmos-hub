@@ -32,3 +32,8 @@ configuration:
       Opcjonalnie. Płytki, które nadają wbudowanym w ESPHome packet_transport przez sx126x na kanale domowym Sensmos,
       jako nazwa=sub:hasło, rozdzielone ;, np. czujnik-dzialka=20:moje-haslo. Nazwa = esphome name płytki,
       hasło = napis z encryption w packet_transport. Odczyty pojawiają się jako sensor.sensmos_lora_<sub>_<id>.
+  meshtastic_track:
+    name: Nody Meshtastic na mapie
+    description: >-
+      Opcjonalnie. Id Twoich albo rodzinnych nodów Meshtastic po przecinku, np. !7efeee00. Tylko ich pozycje
+      trafiają do sensor.meshtastic_<id>_where na mapę HA; pozycji innych nodów Hub nie zapisuje.

@@ -88,7 +88,7 @@ class Hub {
             // Ramki LoRa jako czujniki w HA (sensor.sensmos_lora_*), bez integracji z HACS. HUB_LORA_HA=0 wyłącza.
             if (this.cfg.loraHa !== false) this.haLora = new HaLora({ cfg: haCfg, lora: this.lora, log: this.log, everyS: this.cfg.loraHaEveryS || 300 }).start();
             // Most Meshtastic (POST /meshtastic) → sensor.meshtastic_* i zdarzenie sensmos_meshtastic_message. HUB_MESHTASTIC=0 wyłącza.
-            if (this.cfg.meshtastic !== false) this.mesh = new Meshtastic({ dir: this.cfg.data, cfg: haCfg, log: this.log }).start();
+            if (this.cfg.meshtastic !== false) this.mesh = new Meshtastic({ dir: this.cfg.data, cfg: haCfg, log: this.log, track: this.cfg.meshtasticTrack }).start();
         } else this.log('HA: no access to Home Assistant (Docker: HUB_HA_URL + HUB_HA_TOKEN in .env) — sensors off');
         // Udostępnione czujniki co dataS: zapis do historii lokalnej zawsze, wysyłka do sieci gdy jest połączenie
         // (ten sam batch co ESP32, kanał szyfrowany, BE: onBatch → batch.js).
