@@ -928,6 +928,7 @@
       },
       "steps": {
         "en": [
+          "Fresh board: flash Beta 1.14 from https://sensmos.com/flash/?test=1 (the Beta 1.14 section; it erases the board). A node already on 1.12 can first take 1.14 via the fw-114-ota scenario (OTA, nothing is erased).",
           "You need a node on firmware 1.14, a USB data cable and a computer with Chrome or Edge on the same network (the same router) as the node.",
           "Connect the node to the computer and open https://sensmos.com/my/add/. Enter your wallet address, the 2.4 GHz WiFi name and password, set the location and click Connect node and add. Pick the node's port when the browser asks.",
           "Wait until every step shows a tick (up to 3 minutes). If the node restarts and the page asks you to connect again, click Connect again and pick the port once more.",
@@ -935,6 +936,7 @@
           "Report the result: Works if all steps passed, Not working with the step that failed and the exact message on the page (and your board model)."
         ],
         "pl": [
+          "Świeża płytka: wgraj Betę 1.14 z https://sensmos.com/flash/?test=1 (sekcja Beta 1.14; kasuje płytkę). Nod już na 1.12 może najpierw dostać 1.14 przez scenariusz fw-114-ota (OTA, nic nie jest kasowane).",
           "Potrzebujesz noda z firmware 1.14, kabla USB do danych i komputera z Chrome albo Edge w tej samej sieci (ten sam router) co nod.",
           "Podłącz noda do komputera i otwórz https://sensmos.com/my/add/. Wpisz adres portfela, nazwę i hasło WiFi 2,4 GHz, ustaw lokalizację i kliknij Połącz noda i dodaj. Gdy przeglądarka zapyta, wybierz port noda.",
           "Poczekaj, aż każdy krok dostanie ptaszka (do 3 minut). Jeśli nod się zrestartuje i strona poprosi o ponowne połączenie, kliknij Połącz ponownie i wybierz port jeszcze raz.",
@@ -942,6 +944,7 @@
           "Zgłoś wynik: Działa, jeśli wszystkie kroki przeszły, Nie działa z krokiem, który padł, i dokładnym komunikatem ze strony (oraz modelem płytki)."
         ],
         "de": [
+          "Frisches Board: flashe Beta 1.14 von https://sensmos.com/flash/?test=1 (Abschnitt Beta 1.14; löscht das Board). Ein Node, der schon auf 1.12 läuft, kann 1.14 zuerst über das Szenario fw-114-ota bekommen (OTA, nichts wird gelöscht).",
           "Du brauchst einen Node mit Firmware 1.14, ein USB-Datenkabel und einen Computer mit Chrome oder Edge im selben Netz (am selben Router) wie der Node.",
           "Schließe den Node an den Computer an und öffne https://sensmos.com/my/add/. Gib deine Wallet-Adresse, Name und Passwort des 2,4-GHz-WLANs ein, lege den Standort fest und klicke Node verbinden und hinzufügen. Wähle den Port des Nodes, wenn der Browser fragt.",
           "Warte, bis jeder Schritt einen Haken hat (bis zu 3 Minuten). Startet der Node neu und bittet die Seite um erneutes Verbinden, klicke Erneut verbinden und wähle den Port noch einmal.",
@@ -949,6 +952,7 @@
           "Melde das Ergebnis: Funktioniert, wenn alle Schritte durchliefen, Funktioniert nicht mit dem fehlgeschlagenen Schritt und der genauen Meldung der Seite (und deinem Board-Modell)."
         ],
         "pt": [
+          "Placa nova: grave a Beta 1.14 em https://sensmos.com/flash/?test=1 (seção Beta 1.14; apaga a placa). Um node que já está na 1.12 pode primeiro receber a 1.14 pelo cenário fw-114-ota (OTA, nada é apagado).",
           "Você precisa de um node com firmware 1.14, um cabo USB de dados e um computador com Chrome ou Edge na mesma rede (o mesmo roteador) que o node.",
           "Ligue o node ao computador e abra https://sensmos.com/my/add/. Digite o endereço da carteira, o nome e a senha do WiFi 2,4 GHz, defina a localização e clique em Ligar node e adicionar. Escolha a porta do node quando o navegador pedir.",
           "Espere até cada passo ter um visto (até 3 minutos). Se o node reiniciar e a página pedir para ligar de novo, clique em Ligar de novo e escolha a porta outra vez.",
