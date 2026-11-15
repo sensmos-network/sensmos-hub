@@ -19,6 +19,7 @@ const { Lora } = require('./lora');
 const { HaLora } = require('./ha_lora');
 const { Meshtastic } = require('./meshtastic');
 const { LoRaWan } = require('./lorawan');
+const { EspHomeLora } = require('./esphome_lora');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
 const OWNER_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -49,6 +50,7 @@ class Hub {
         if (this.cfg.loraKey) this.lora.configure({ key: this.cfg.loraKey });   // opcja dodatku / HUB_LORA_KEY
         // Cudze czujniki LoRaWAN (ABP): ramki z wybranymi DevAddr idą do ChirpStacka/TTN jak z bramy (HUB_LORAWAN_FORWARD + HUB_LORAWAN_DEVADDR).
         this.lorawan = new LoRaWan({ forward: this.cfg.lorawanForward, devaddrs: this.cfg.lorawanDevaddr, deviceId: this.id.id, log: this.log, send: o => this.send(o) });
+        this.esphome = new EspHomeLora({ boards: this.cfg.esphomeLora, lora: this.lora, log: this.log, send: o => this.send(o) });
         this.registeredFile = path.join(this.cfg.data, 'registered.json');
         this.ws = null; this.chan = null; this.tunnels = null; this.stopping = false; this.backoffS = this.cfg.backoffS;
         this.seen = new Set();
@@ -240,6 +242,7 @@ class Hub {
         this.send({ type: 'check_assign' });
         this.checkT = setInterval(() => this.send({ type: 'check_assign' }), this.cfg.checkS * 1000);
         this.lorawan.claim();
+        this.esphome.claim();
         this.emit('connected');
     }
 
@@ -289,6 +292,8 @@ class Hub {
             case 'lora_frame': this.lora.onWs(m.hex, undefined, m); return;
             case 'lorawan_frame': this.lorawan.onWs(m); return;
             case 'lorawan_claimed': this.log(`LoRaWAN: the network delivers ${m.n} DevAddr to this hub`); return;
+            case 'esphome_frame': this.esphome.onWs(m); return;
+            case 'esphome_claimed': this.log(`ESPHome LoRa: the network delivers frames of ${m.n} board(s) to this hub`); return;
             case 'lora_frame_tx':
                 // BE prosi bazę o nadanie radiem do jej czujnika — Hub radia nie ma.
                 if (!this.seen.has(m.type)) { this.seen.add(m.type); this.log('LoRa: frame to transmit by radio refused (the hub has no radio)'); }

@@ -151,26 +151,37 @@ class Lora {
         if (this.seen.size > 200) for (const [k, t] of this.seen) if (now - t > DEDUP_S) this.seen.delete(k);
         if (prev !== undefined && now - prev < DEDUP_S) return null;
         delete this.drops.crc_key; delete this.drops.no_key;   // po poprawce klucza kolejny błąd znów trafi do logu
-        const it = item(fr, now, 'ws');
+        const it = this.accept(item(fr, now, 'ws'), now, meta);
+        // Kwit do BE (FW lora8): bez treści, BE wie tylko, że doszło (staty, podział ryczałtu RX).
+        this.send({ type: 'lora_data_rcpt', sub: fr.sub, via: 'ws', len: fr.payload.length, enc: fr.enc, fh: fr.fh });
+        // Bez treści w logu: log trafia do paczki diagnostycznej.
+        this.log(`LoRa: frame sub ${fr.sub}, ${fr.payload.length} B${fr.enc ? ', AES' : ''}`);
+        this.emit(it);
+        return it;
+    }
+
+    // Odczyt czujnika z dowolnego źródła (ramka DATA, zwykłe ESPHome przez sieć): ostatnia ramka per sub, zwykły odstęp,
+    // kto usłyszał. it = { sub, enc, text|hex, ts?, via? }. Z `log` od razu zapis, wpis do logu i powiadomienie słuchaczy.
+    accept(it, now = Math.floor(Date.now() / 1000), meta = {}, via, log) {
+        it.ts = it.ts || now;
+        if (via) it.via = via;
         heard(it, meta);
         // Zwykły odstęp czujnika: najdłuższy z ostatnich GAPS odstępów między ramkami. Z niego Hub liczy, kiedy czujnik
         // „zamilkł” (ha_lora). Najdłuższy, nie ostatni: czujnik na zdarzenia (skrzynka, auto) nadaje dwie ramki
         // w 5 minut, a potem tylko znak życia co 12 h, i krótki odstęp nie może dać alarmu ciszy po godzinie.
-        const before = this.last[String(fr.sub)];
+        const before = this.last[String(it.sub)];
         const gaps = before && Array.isArray(before.gaps) ? before.gaps.slice() : before && before.gap ? [before.gap] : [];
         if (before && before.ts && now - before.ts >= 60) gaps.push(now - before.ts);
         if (gaps.length) { it.gaps = gaps.slice(-GAPS); it.gap = Math.max(...it.gaps); }
         this.frames.push(it);
         if (this.frames.length > RING) this.frames.splice(0, this.frames.length - RING);
-        this.last[String(fr.sub)] = it;
+        this.last[String(it.sub)] = it;
         this.save();
-        // Kwit do BE (FW lora8): bez treści, BE wie tylko, że doszło (staty, podział ryczałtu RX).
-        this.send({ type: 'lora_data_rcpt', sub: fr.sub, via: 'ws', len: fr.payload.length, enc: fr.enc, fh: fr.fh });
-        // Bez treści w logu: log trafia do paczki diagnostycznej.
-        this.log(`LoRa: frame sub ${fr.sub}, ${fr.payload.length} B${fr.enc ? ', AES' : ''}`);
-        for (const fn of this.listeners) { try { fn(it); } catch (e) { this.log('LoRa:', e.message); } }
+        if (log) { this.log(log); this.emit(it); }
         return it;
     }
+
+    emit(it) { for (const fn of this.listeners) { try { fn(it); } catch (e) { this.log('LoRa:', e.message); } } }
 
     // POST /node/lorasend: Hub nie ma radia, więc ramkę nadaje „przez sieć” — BE dowozi ją do bazy adresata (FW: sent_ws).
     sendData({ dst, sub = 0, payload = '', aes = false }, connected) {

@@ -26,3 +26,9 @@ configuration:
     name: DevAddr LoRaWAN
     description: >-
       Opcjonalnie. Adresy Twoich czujników ABP po przecinku, np. 26011A2B. Do Huba trafiają tylko ramki z tymi adresami.
+  esphome_lora:
+    name: Zwykłe płytki ESPHome przez LoRa
+    description: >-
+      Opcjonalnie. Płytki, które nadają wbudowanym w ESPHome packet_transport przez sx126x na kanale domowym Sensmos,
+      jako nazwa=sub:hasło, rozdzielone ;, np. czujnik-dzialka=20:moje-haslo. Nazwa = esphome name płytki,
+      hasło = napis z encryption w packet_transport. Odczyty pojawiają się jako sensor.sensmos_lora_<sub>_<id>.

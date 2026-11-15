@@ -14,6 +14,7 @@ const cfg = {
     meshtastic: !/^(0|false|no|off)$/i.test(process.env.HUB_MESHTASTIC || ''),
     lorawanForward: process.env.HUB_LORAWAN_FORWARD || '',   // host:port ChirpStacka albo TTN (Semtech UDP)
     lorawanDevaddr: process.env.HUB_LORAWAN_DEVADDR || '',   // DevAddr czujników ABP, po przecinku
+    esphomeLora: process.env.HUB_ESPHOME_LORA || '',         // zwykłe ESPHome przez sieć: "nazwa=sub:hasło; …"
 };
 
 // `diag`: paczka diagnostyczna z katalogu danych (działa też obok uruchomionego hubu).

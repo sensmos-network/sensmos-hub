@@ -191,6 +191,16 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   leave your ChirpStack. Uplink only, so **ABP only** (OTAA needs a Join Accept downlink); keep the sensor on a
   channel the nodes hear, ideally 868.1 MHz DR1 (SF11, the Sensmos home channel), and turn off the frame counter
   check only if the sensor resets it.
+- **Plain ESPHome over the Sensmos network (0.2.0-beta7):** a board running only stock ESPHome, with no Sensmos
+  component, sends with ESPHome's own `packet_transport` over the `sx126x` radio on the Sensmos home channel
+  (868.1 MHz, SF11, BW 125 kHz, CR 4/5, sync `0x34 0x44`). Nodes hear it like any foreign frame. Set
+  `HUB_ESPHOME_LORA` (add-on: `esphome_lora`) to `name=sub:encryption`, `;` between boards, e.g.
+  `allotment-sensor=20:my-secret`: the network sends the hub only frames with those board names, and the hub
+  decrypts them (XXTEA, the key hashed from the `encryption` string, as ESPHome does) and shows each value as
+  `sensor.sensmos_lora_<sub>_<id>`, with the silence alert, the events and the history of any LoRa sensor.
+  `rolling_code_enable: true` on the board is honoured (replayed frames are dropped); leave `ping_pong_enable` off,
+  it needs a two-way link. The board name travels in clear (that is how packet_transport works), so pick one that
+  says nothing about you. Example: `examples/lora-zwykle-esphome.yaml` in sensmos-esphome.
 - **Where is my tag (0.2.0-beta7):** every LoRa sensor also gets `sensor.sensmos_lora_<sub>_heard`: the id of the
   Sensmos node that heard its last frame, with RSSI, SNR and that node's position rounded to about 1 km as
   `latitude`/`longitude` attributes, so the HA map card shows roughly where the sensor is. A bag, a bike or a dog

@@ -48,6 +48,11 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
   and your ChirpStack Gateway Bridge or The Things Stack in **lorawan_forward** (`host:1700`). The network sends the
   hub only frames with those addresses and the hub forwards them like a gateway; register the EUI from the log line
   `LoRaWAN: gateway EUI …`. Decoding and the keys stay in ChirpStack. Details in the README.
+- Plain ESPHome boards (no Sensmos component): a board with ESPHome's own `packet_transport` over `sx126x` on the
+  Sensmos home channel (868.1 MHz, SF11, sync `0x34 0x44`) goes in **esphome_lora** as `name=sub:encryption`
+  (`;` between boards). The network sends the hub only frames with those board names; the hub decrypts them and
+  shows the readings as `sensor.sensmos_lora_<sub>_<id>`, with silence alerts like any LoRa sensor. Example in the
+  README of sensmos-esphome (`lora-zwykle-esphome.yaml`).
 - `sensor.sensmos_lora_<sub>_heard`: which Sensmos node heard the sensor last, with its position rounded to about
   1 km for the HA map card (where is my tag).
 - No HACS integration needed. If you also use the Sensmos integration with this hub, it shows the same
