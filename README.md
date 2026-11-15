@@ -150,6 +150,10 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   2 days), and the hub fires `sensmos_lora_silent` once, then `sensmos_lora_back` on the next frame. Good for a
   garage or allotment guard: a dead battery or a removed board raises an alarm too. Recipe:
   [sensmos-esphome](https://github.com/sensmos-network/sensmos-esphome#recipe-garage--allotment-guard).
+- **Meters (0.2.0-beta6):** the keys `kwh`, `m3`/`water` and `gas` become `total_increasing` sensors with the
+  right device class and unit, so Home Assistant takes them straight into the **Energy** dashboard; `w`/`kw` are
+  power. Recipe for an electricity meter (LED pulses) and a water meter (pulse output) in the basement:
+  [sensmos-esphome](https://github.com/sensmos-network/sensmos-esphome#recipe-meters-in-the-basement).
 - **Same API as a board:** `/info` carries a `lora` field, and `/lora/inbox`, `/node/lora_rx`,
   `/node/lora_emerg` answer like the firmware, so the app's LoRa screen and the Sensmos integration for HA
   (LoRa DATA frame sensors) work with the hub too. `/node/lorasend` sends a frame through the network

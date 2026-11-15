@@ -205,3 +205,14 @@ test('LAN: /info.lora, /node/lora_rx, /lora/inbox, /node/lorasend, /node/lora_em
         assert.strictEqual(r.key_set, false, 'pusty klucz kasuje, jak w FW');
     } finally { srv.close(); }
 });
+
+test('toStates: liczniki (kwh, m3, gas) narastające do panelu Energia, moc chwilowa jako pomiar', () => {
+    const s = toStates({ sub: 5, text: 'kwh=1234.567;w=830;m3=56.789;gas=12.3' });
+    const by = Object.fromEntries(s.map(x => [x.entity_id, x.attributes]));
+    assert.deepStrictEqual([by['sensor.sensmos_lora_5_kwh'].device_class, by['sensor.sensmos_lora_5_kwh'].unit_of_measurement, by['sensor.sensmos_lora_5_kwh'].state_class], ['energy', 'kWh', 'total_increasing']);
+    assert.deepStrictEqual([by['sensor.sensmos_lora_5_w'].device_class, by['sensor.sensmos_lora_5_w'].state_class], ['power', 'measurement']);
+    assert.deepStrictEqual([by['sensor.sensmos_lora_5_m3'].device_class, by['sensor.sensmos_lora_5_m3'].state_class], ['water', 'total_increasing']);
+    assert.strictEqual(by['sensor.sensmos_lora_5_gas'].device_class, 'gas');
+    // Stare klucze bez zmian: temperatura dalej pomiar.
+    assert.strictEqual(toStates({ sub: 1, text: 't=3' })[1].attributes.state_class, 'measurement');
+});

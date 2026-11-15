@@ -15,6 +15,12 @@ const KEYS = {
     co2: ['carbon_dioxide', 'ppm'], lux: ['illuminance', 'lx'],
     pm25: ['pm25', 'µg/m³'], pm10: ['pm10', 'µg/m³'],
     rssi: ['signal_strength', 'dBm'],
+    // Liczniki z piwnicy (prąd, woda, gaz): stan narastający, więc HA bierze je do panelu Energia.
+    // Spadek (restart płytki liczącej od zera) HA traktuje jako nowy cykl licznika, nie jako ujemne zużycie.
+    w: ['power', 'W'], kw: ['power', 'kW'],
+    kwh: ['energy', 'kWh', 'total_increasing'],
+    m3: ['water', 'm³', 'total_increasing'], water: ['water', 'm³', 'total_increasing'],
+    gas: ['gas', 'm³', 'total_increasing'],
 };
 const NUM = /^-?\d+(\.\d+)?$/;
 const SILENT_MAX_S = 2 * 86400;
@@ -62,13 +68,13 @@ function toStates(it, { id8 } = {}) {
             ...(it.hex ? { hex: it.hex } : {}), ...(Object.keys(values).length ? { values } : {}) },
     }];
     for (const [k, v] of Object.entries(values)) {
-        const [device_class, unit] = KEYS[k] || [];
+        const [device_class, unit, state_class = 'measurement'] = KEYS[k] || [];
         const num = typeof v === 'number';
         out.push({
             entity_id: `${base}_${k}`,
             state: v,
             attributes: { ...common, friendly_name: `${label} ${k}`,
-                ...(num ? { state_class: 'measurement' } : {}),
+                ...(num ? { state_class } : {}),
                 ...(num && device_class ? { device_class, unit_of_measurement: unit } : {}) },
         });
     }
