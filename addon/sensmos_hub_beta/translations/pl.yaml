@@ -18,3 +18,11 @@ configuration:
     description: >-
       Ta sama fraza, którą ustawiasz w czujnikach LoRa. Hub odszyfrowuje nią ich ramki i pokazuje je
       jako encje sensor.sensmos_lora_*. Opcjonalnie: można ją też ustawić w apce (karta Huba → LoRa).
+  lorawan_forward:
+    name: Przekazywanie LoRaWAN (host:port)
+    description: >-
+      Opcjonalnie. Twój ChirpStack Gateway Bridge albo The Things Stack, np. 192.168.1.10:1700. Hub przekazuje tam ramki LoRaWAN z adresami poniżej, jak brama (tylko uplink).
+  lorawan_devaddr:
+    name: DevAddr LoRaWAN
+    description: >-
+      Opcjonalnie. Adresy Twoich czujników ABP po przecinku, np. 26011A2B. Do Huba trafiają tylko ramki z tymi adresami.

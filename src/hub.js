@@ -18,6 +18,7 @@ const { History } = require('./history');
 const { Lora } = require('./lora');
 const { HaLora } = require('./ha_lora');
 const { Meshtastic } = require('./meshtastic');
+const { LoRaWan } = require('./lorawan');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
 const OWNER_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -46,6 +47,8 @@ class Hub {
         // Czujniki LoRa przez sieć (Hub nie ma radia): ramki DATA do Hubu dowozi BE, Hub dekoduje kluczem z frazy.
         this.lora = new Lora({ dir: this.cfg.data, deviceId: this.id.id, log: this.log, send: o => this.send(o) });
         if (this.cfg.loraKey) this.lora.configure({ key: this.cfg.loraKey });   // opcja dodatku / HUB_LORA_KEY
+        // Cudze czujniki LoRaWAN (ABP): ramki z wybranymi DevAddr idą do ChirpStacka/TTN jak z bramy (HUB_LORAWAN_FORWARD + HUB_LORAWAN_DEVADDR).
+        this.lorawan = new LoRaWan({ forward: this.cfg.lorawanForward, devaddrs: this.cfg.lorawanDevaddr, deviceId: this.id.id, log: this.log, send: o => this.send(o) });
         this.registeredFile = path.join(this.cfg.data, 'registered.json');
         this.ws = null; this.chan = null; this.tunnels = null; this.stopping = false; this.backoffS = this.cfg.backoffS;
         this.seen = new Set();
@@ -88,6 +91,7 @@ class Hub {
         // Udostępnione czujniki co dataS: zapis do historii lokalnej zawsze, wysyłka do sieci gdy jest połączenie
         // (ten sam batch co ESP32, kanał szyfrowany, BE: onBatch → batch.js).
         this.dataT = setInterval(() => this.sendSensors(), (this.cfg.dataS || 300) * 1000);
+        this.lorawan.start();
         if (!this.cfg.owner) { this.waitForOwner(haCfg); return this; }
         try { await this.register(); } catch (e) { this.log(e.message); }
         this.connect();
@@ -133,6 +137,7 @@ class Hub {
         this.ha?.stop();
         this.haLora?.stop();
         this.mesh?.stop();
+        this.lorawan?.stop();
         clearInterval(this.dataT);
         this.mdns?.stop();
         this.events.stop();
@@ -234,6 +239,7 @@ class Hub {
         this.pingT = setInterval(() => this.ping(), this.cfg.pingS * 1000);
         this.send({ type: 'check_assign' });
         this.checkT = setInterval(() => this.send({ type: 'check_assign' }), this.cfg.checkS * 1000);
+        this.lorawan.claim();
         this.emit('connected');
     }
 
@@ -281,6 +287,8 @@ class Hub {
                 return;
             case 'tun_open': return this.tunnels.onOpen(m);
             case 'lora_frame': this.lora.onWs(m.hex); return;
+            case 'lorawan_frame': this.lorawan.onWs(m); return;
+            case 'lorawan_claimed': this.log(`LoRaWAN: the network delivers ${m.n} DevAddr to this hub`); return;
             case 'lora_frame_tx':
                 // BE prosi bazę o nadanie radiem do jej czujnika — Hub radia nie ma.
                 if (!this.seen.has(m.type)) { this.seen.add(m.type); this.log('LoRa: frame to transmit by radio refused (the hub has no radio)'); }

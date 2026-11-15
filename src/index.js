@@ -12,6 +12,8 @@ const cfg = {
     loraKey: process.env.HUB_LORA_KEY || '',
     loraHa: !/^(0|false|no|off)$/i.test(process.env.HUB_LORA_HA || ''),
     meshtastic: !/^(0|false|no|off)$/i.test(process.env.HUB_MESHTASTIC || ''),
+    lorawanForward: process.env.HUB_LORAWAN_FORWARD || '',   // host:port ChirpStacka albo TTN (Semtech UDP)
+    lorawanDevaddr: process.env.HUB_LORAWAN_DEVADDR || '',   // DevAddr czujników ABP, po przecinku
 };
 
 // `diag`: paczka diagnostyczna z katalogu danych (działa też obok uruchomionego hubu).

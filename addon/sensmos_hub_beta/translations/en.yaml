@@ -18,3 +18,11 @@ configuration:
     description: >-
       The same phrase you set in your LoRa sensors. The hub decrypts their frames with it and shows them
       as sensor.sensmos_lora_* entities. Optional: you can also set it in the app (hub card → LoRa).
+  lorawan_forward:
+    name: LoRaWAN forward (host:port)
+    description: >-
+      Optional. Your ChirpStack Gateway Bridge or The Things Stack, e.g. 192.168.1.10:1700. The hub forwards to it the LoRaWAN frames with the addresses below, like a gateway (uplink only).
+  lorawan_devaddr:
+    name: LoRaWAN DevAddr
+    description: >-
+      Optional. Addresses of your ABP sensors, comma separated, e.g. 26011A2B. Only frames with these addresses reach the hub.

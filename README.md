@@ -180,6 +180,17 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
       trigger: { platform: mqtt, topic: "msh/+/2/json/#" }
       action: { service: rest_command.sensmos_meshtastic, data: { payload: "{{ trigger.payload }}" } }
   ```
+- **Other people's LoRaWAN sensors, narrow version (0.2.0-beta7):** a ready LoRaWAN sensor (Dragino, Milesight, a
+  Heltec with LMIC…) in Home Assistant through your own ChirpStack or The Things Stack, with no LoRaWAN gateway of
+  your own. Sensmos nodes already pass on the foreign frames they hear; set `HUB_LORAWAN_DEVADDR` (add-on:
+  `lorawan_devaddr`, comma separated, as ChirpStack shows them) and the network sends the hub only the frames with
+  those addresses. The hub forwards them like a gateway (Semtech UDP) to `HUB_LORAWAN_FORWARD` (`lorawan_forward`,
+  e.g. `192.168.1.10:1700` for ChirpStack's Gateway Bridge or `eu1.cloud.thethings.network:1700`). Register the
+  gateway EUI from the log line `LoRaWAN: gateway EUI …`. ChirpStack checks the MIC and the counter, decodes with the
+  device's own codec and gives it to HA over MQTT (or the HA *The Things Network* integration). The keys never
+  leave your ChirpStack. Uplink only, so **ABP only** (OTAA needs a Join Accept downlink); keep the sensor on a
+  channel the nodes hear, ideally 868.1 MHz DR1 (SF11, the Sensmos home channel), and turn off the frame counter
+  check only if the sensor resets it.
 - **Same API as a board:** `/info` carries a `lora` field, and `/lora/inbox`, `/node/lora_rx`,
   `/node/lora_emerg` answer like the firmware, so the app's LoRa screen and the Sensmos integration for HA
   (LoRa DATA frame sensors) work with the hub too. `/node/lorasend` sends a frame through the network

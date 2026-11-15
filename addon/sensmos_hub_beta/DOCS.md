@@ -44,6 +44,10 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
 - Meshtastic bridge: an automation with an MQTT trigger on `msh/+/2/json/#` that calls a `rest_command` posting the
   payload to `http://127.0.0.1:80/meshtastic` with `Authorization: Bearer <hub PIN>` gives you `sensor.meshtastic_*`
   and the `sensmos_meshtastic_message` event. The hub only listens; it never transmits. Full example in the README.
+- Other people's LoRaWAN sensors (ABP only, uplink only): put their DevAddr in **lorawan_devaddr** (comma separated)
+  and your ChirpStack Gateway Bridge or The Things Stack in **lorawan_forward** (`host:1700`). The network sends the
+  hub only frames with those addresses and the hub forwards them like a gateway; register the EUI from the log line
+  `LoRaWAN: gateway EUI …`. Decoding and the keys stay in ChirpStack. Details in the README.
 - No HACS integration needed. If you also use the Sensmos integration with this hub, it shows the same
   frames as **LoRa DATA frame** sensors.
 
