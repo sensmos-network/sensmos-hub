@@ -40,11 +40,11 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
 - No HACS integration needed. If you also use the Sensmos integration with this hub, it shows the same
   frames as **LoRa DATA frame** sensors.
 
-## Rewards
+## GALU allocation
 
-From 0.1.2 a confirmed hub earns GALU at half the weight of an ESP32 node. Confirm it once from the
+From 0.1.2 a confirmed hub receives GALU at half the weight of an ESP32 node. Confirm it once from the
 Sensmos app (beta 1.6.4 or newer): hub card → **Confirm hub**, with the phone on the same Wi-Fi as
-this Home Assistant. Several hubs behind one internet address share one hub reward.
+this Home Assistant. Several hubs behind one internet address share one hub allocation.
 
 ## Reporting
 

@@ -10,12 +10,12 @@ backend and the app treat it as a node. It has no radio, so it does not relay Lo
 reported to the backend as kind `hub`. It can still receive your LoRa sensors through the network
 (from 0.2.0-beta2, see below).
 
-**Rewards (from 0.1.2, beta first).** A hub earns GALU at half the weight of an ESP32 node once its
+**GALU allocation (from 0.1.2, beta first).** A hub receives GALU at half the weight of an ESP32 node once its
 owner confirms it from the Sensmos app: open the hub's card while the phone is on the **same Wi-Fi**
 as the hub and tap **Confirm hub**. The app asks the hub (with its PIN) to sign a one-time challenge,
 signs it with the wallet and sends the phone's location; the backend accepts it only when the phone
 and the hub reach the internet from the same address. Several hubs behind one address share one
-hub reward.
+hub allocation.
 
 ## What you need
 

@@ -3,7 +3,7 @@ configuration:
     name: Adres portfela
     description: >-
       Adres portfela z apki Sensmos (ekran Portfel, zaczyna się od 0x). Nod rejestruje się na ten
-      portfel i tam trafiają nagrody.
+      portfel i tam trafia przydział GALU.
   pin:
     name: PIN
     description: >-

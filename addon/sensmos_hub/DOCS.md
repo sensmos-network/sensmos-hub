@@ -24,9 +24,9 @@ Step-by-step guide with pictures: https://sensmos.com/ha/
 - **LAN port** (`port`): port the app talks to on your network (default 80, like an ESP32 node). The
   add-on uses host networking, so the port must be free on this machine.
 
-## Rewards and Home Assistant sensors
+## GALU allocation and Home Assistant sensors
 
-The testers' build (**Sensmos Hub (beta)** in this repository) already earns GALU at half the weight
+The testers' build (**Sensmos Hub (beta)** in this repository) already receives GALU at half the weight
 of an ESP32 node once you confirm it from the app, and can share the sensors Home Assistant knows
 (temperature, CO₂, power and more) to the Sensmos map. This stable add-on gets both after testers have
 checked them. Join the testers: https://sensmos.com/test/

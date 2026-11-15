@@ -3,7 +3,7 @@ configuration:
     name: Wallet address
     description: >-
       Your wallet address from the Sensmos app (Wallet screen, starts with 0x). The node is registered
-      to this wallet and its rewards go there.
+      to this wallet and its GALU allocations go there.
   pin:
     name: PIN
     description: >-

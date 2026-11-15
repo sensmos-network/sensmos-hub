@@ -4,7 +4,7 @@ configuration:
     description: >-
       Leave empty and add the hub from the Sensmos app (Nodes → Add → Search the network, PIN from the
       Home Assistant notification): the app assigns it to your wallet. Or paste your wallet address
-      (Wallet screen, starts with 0x). The node is registered to this wallet and its rewards go there.
+      (Wallet screen, starts with 0x). The node is registered to this wallet and its GALU allocations go there.
   pin:
     name: PIN
     description: >-
