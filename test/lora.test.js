@@ -133,6 +133,23 @@ test('HaLora: nowa ramka → stany i zdarzenie w HA, odnowienie po restarcie HA'
     } finally { hl.stop(); ha.srv.close(); }
 });
 
+test('Lora: zwykły odstęp = najdłuższy z ostatnich 8, czujnik na zdarzenia nie milknie po godzinie', () => {
+    const lo = new L.Lora({ dir: tmp(), deviceId: DEV });
+    lo.configure({ key: 'fraza testowa' });
+    const k = L.keyFromPhrase('fraza testowa');
+    const f = (n, txt) => L.encode('a1b2c3d4', 8, txt, k, Buffer.from(String(n).padStart(8, '0'), 'hex'));
+    const T = 200000;
+    lo.onWs(f(1, 'mail=0'), T);
+    lo.onWs(f(2, 'mail=0'), T + 12 * 3600);                    // znak życia co 12 h
+    lo.onWs(f(3, 'mail=1'), T + 12 * 3600 + 3600);             // przyszła poczta
+    lo.onWs(f(4, 'mail=0'), T + 12 * 3600 + 3900);             // wyjęta 5 min później
+    assert.strictEqual(lo.last['8'].gap, 12 * 3600);
+    assert.strictEqual(silentAfter(lo.last['8']), 36 * 3600);
+    for (let i = 0; i < 9; i++) lo.onWs(f(10 + i, 'mail=0'), T + 14 * 3600 + 120 * (i + 1));
+    assert.strictEqual(lo.last['8'].gap, 120, 'po 8 krótkich odstępach dłuższe wypadają');
+    assert.strictEqual(lo.last['8'].gaps.length, 8);
+});
+
 test('HaLora: czujnik zamilkł → binary_sensor on + jedno zdarzenie; powrót → sensmos_lora_back, także po restarcie Huba', async () => {
     const ha = await fakeHa();
     const dir = tmp();

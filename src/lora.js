@@ -11,6 +11,7 @@ const path = require('path');
 const F_AES = 0x01, HDR = 8, NONCE = 4, PAYLOAD_MAX = 128;
 const RING = 6;          // FW: LORA_DATA_INBOX_SIZE
 const DEDUP_S = 120;     // FW: ta sama suma w oknie 120 s = powtórka (ramkę zgłasza każdy, kto ją usłyszał)
+const GAPS = 8;
 
 const CRC_T = (() => {
     const t = new Uint32Array(256);
@@ -139,10 +140,13 @@ class Lora {
         if (prev !== undefined && now - prev < DEDUP_S) return null;
         delete this.drops.crc_key; delete this.drops.no_key;   // po poprawce klucza kolejny błąd znów trafi do logu
         const it = item(fr, now, 'ws');
-        // Odstęp od poprzedniej ramki tego czujnika: z niego Hub liczy, kiedy czujnik „zamilkł” (ha_lora).
+        // Zwykły odstęp czujnika: najdłuższy z ostatnich GAPS odstępów między ramkami. Z niego Hub liczy, kiedy czujnik
+        // „zamilkł” (ha_lora). Najdłuższy, nie ostatni: czujnik na zdarzenia (skrzynka, auto) nadaje dwie ramki
+        // w 5 minut, a potem tylko znak życia co 12 h, i krótki odstęp nie może dać alarmu ciszy po godzinie.
         const before = this.last[String(fr.sub)];
-        if (before && before.ts && now - before.ts >= 60) it.gap = now - before.ts;
-        else if (before && before.gap) it.gap = before.gap;
+        const gaps = before && Array.isArray(before.gaps) ? before.gaps.slice() : before && before.gap ? [before.gap] : [];
+        if (before && before.ts && now - before.ts >= 60) gaps.push(now - before.ts);
+        if (gaps.length) { it.gaps = gaps.slice(-GAPS); it.gap = Math.max(...it.gaps); }
         this.frames.push(it);
         if (this.frames.length > RING) this.frames.splice(0, this.frames.length - RING);
         this.last[String(fr.sub)] = it;

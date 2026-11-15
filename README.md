@@ -147,7 +147,8 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   back after a Home Assistant restart. Docker needs `HUB_HA_URL` + `HUB_HA_TOKEN`; `HUB_LORA_HA=0` turns it off.
 - **Sensor went silent:** each sub-address also gets `binary_sensor.sensmos_lora_<sub>_silent` (device class
   `problem`). It turns `on` when no frame came for 3 of the sensor's usual intervals (at least 1 hour, at most
-  2 days), and the hub fires `sensmos_lora_silent` once, then `sensmos_lora_back` on the next frame. Good for a
+  2 days; the usual interval is the longest of the last 8, so an event sensor with a 12 h heartbeat, like a
+  mailbox, is not called silent an hour after two quick frames), and the hub fires `sensmos_lora_silent` once, then `sensmos_lora_back` on the next frame. Good for a
   garage or allotment guard: a dead battery or a removed board raises an alarm too. Recipe:
   [sensmos-esphome](https://github.com/sensmos-network/sensmos-esphome#recipe-garage--allotment-guard).
 - **Meters (0.2.0-beta6):** the keys `kwh`, `m3`/`water` and `gas` become `total_increasing` sensors with the
