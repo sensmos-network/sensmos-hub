@@ -1144,6 +1144,61 @@
           "LoRa: frame sub 30"
         ]
       }
+    },
+    {
+      "id": "kom-019-usb",
+      "component": "fw",
+      "min_version": "0.19-kom",
+      "hardware": {
+        "lora": true,
+        "kom": true
+      },
+      "points": 10,
+      "limit_testers": 5,
+      "ends_at": "2027-01-31T23:59:59Z",
+      "title": {
+        "en": "Communicator 0.19-kom: USB round trip without losing the ID",
+        "pl": "Komunikator 0.19-kom: kółko po USB bez utraty ID",
+        "de": "Kommunikator 0.19-kom: USB-Runde ohne ID-Verlust",
+        "pt": "Comunicador 0.19-kom: volta por USB sem perder o ID"
+      },
+      "steps": {
+        "en": [
+          "Use a communicator that already runs Sensmos KOM (Heltec Wireless Paper). In Chrome or Edge open sensmos.com/flash/communicator/?test=1 and connect it over USB. Write down its ID from the app.",
+          "In Test builds click 0.19-kom. In the serial log check the line `[kom] SENSMOS komunikator 0.19-kom` and that the radio self-test passes.",
+          "Click 0.16-kom (step down). The communicator boots and the app shows the same ID.",
+          "Click 0.19-kom again. ID and key are unchanged, a message to your group still goes through, and the Neighbourhood board switch in the app turns on.",
+          "Report the result on sensmos.com/test with scenario kom-019-usb: ok, or fail with the step and what you saw. Never use the regular entry for this test: it can erase the ID."
+        ],
+        "pl": [
+          "Użyj komunikatora, który już ma Sensmos KOM (Heltec Wireless Paper). W Chrome albo Edge otwórz sensmos.com/flash/communicator/?test=1 i podłącz go po USB. Zapisz jego ID z apki.",
+          "W sekcji Wersje testowe kliknij 0.19-kom. W logu portu szeregowego sprawdź linię `[kom] SENSMOS komunikator 0.19-kom` i czy test radia przechodzi.",
+          "Kliknij 0.16-kom (krok w dół). Komunikator startuje, a apka pokazuje to samo ID.",
+          "Znów kliknij 0.19-kom. ID i klucz bez zmian, wiadomość do grupy dalej przechodzi, a przełącznik Tablica ogłoszeń osiedla w apce się włącza.",
+          "Zgłoś wynik na sensmos.com/test ze scenariuszem kom-019-usb: ok albo fail z numerem kroku i tym, co widzisz. Do tego testu nigdy nie używaj zwykłego wpisu: może skasować ID."
+        ],
+        "de": [
+          "Nimm einen Kommunikator, auf dem schon Sensmos KOM läuft (Heltec Wireless Paper). Öffne in Chrome oder Edge sensmos.com/flash/communicator/?test=1 und schließ ihn per USB an. Notier seine ID aus der App.",
+          "Klick unter Test builds auf 0.19-kom. Prüf im seriellen Log die Zeile `[kom] SENSMOS komunikator 0.19-kom` und dass der Funk-Selbsttest besteht.",
+          "Klick auf 0.16-kom (Schritt zurück). Der Kommunikator startet und die App zeigt dieselbe ID.",
+          "Klick wieder auf 0.19-kom. ID und Schlüssel sind unverändert, eine Nachricht an deine Gruppe geht weiter durch und der Schalter Schwarzes Brett der Siedlung in der App lässt sich einschalten.",
+          "Melde das Ergebnis auf sensmos.com/test mit Szenario kom-019-usb: ok, oder fail mit Schritt und Beobachtung. Nimm für diesen Test nie den normalen Eintrag: er kann die ID löschen."
+        ],
+        "pt": [
+          "Use um comunicador que já corre Sensmos KOM (Heltec Wireless Paper). No Chrome ou Edge abra sensmos.com/flash/communicator/?test=1 e ligue-o por USB. Anote o ID dele na app.",
+          "Em Test builds clique em 0.19-kom. No registo série confirme a linha `[kom] SENSMOS komunikator 0.19-kom` e que o autoteste do rádio passa.",
+          "Clique em 0.16-kom (passo atrás). O comunicador arranca e a app mostra o mesmo ID.",
+          "Clique de novo em 0.19-kom. ID e chave sem alterações, uma mensagem para o seu grupo continua a passar e o interruptor Quadro de avisos do bairro na app liga-se.",
+          "Comunique o resultado em sensmos.com/test com o cenário kom-019-usb: ok, ou fail com o passo e o que viu. Nunca use a entrada normal neste teste: pode apagar o ID."
+        ]
+      },
+      "expected": {
+        "en": "0.19-kom boots, steps down to 0.16-kom and back over USB, and the ID and key survive both flashes.",
+        "pl": "0.19-kom startuje, schodzi po USB na 0.16-kom i wraca, a ID i klucz przeżywają oba wgrania.",
+        "de": "0.19-kom startet, geht per USB auf 0.16-kom zurück und wieder hoch, und ID und Schlüssel überstehen beide Flashvorgänge.",
+        "pt": "O 0.19-kom arranca, desce por USB para 0.16-kom e volta, e o ID e a chave sobrevivem às duas gravações."
+      },
+      "auto_check": {}
     }
   ]
 }
