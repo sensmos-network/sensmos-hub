@@ -17,6 +17,7 @@ const ha = require('./ha');
 const { History } = require('./history');
 const { Lora } = require('./lora');
 const { HaLora } = require('./ha_lora');
+const { Meshtastic } = require('./meshtastic');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
 const OWNER_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -70,7 +71,7 @@ class Hub {
         this.logLocal(`Hub PIN: ${this.pin} (the app asks for it when pairing and exporting)`);
         this.lan = lan.start({ port: this.cfg.port, pin: this.pin, identity: this.id, pairing: this.pairing, firmware: FIRMWARE, owner: () => this.cfg.owner || '', onOwner: o => this.setOwner(o),
             sensors: () => this.ha?.snapshot() || null, shared: this.shared = new ha.Shared(this.cfg.data),
-            data: () => this.dataView(), lora: this.lora, connected: () => !!this.chan, history: this.history = new History(this.cfg.data, { log: this.log }),
+            data: () => this.dataView(), lora: this.lora, mesh: { ingest: m => (this.mesh ? this.mesh.ingest(m) : { error: 'no Home Assistant access' }) }, connected: () => !!this.chan, history: this.history = new History(this.cfg.data, { log: this.log }),
             log: this.log, onPairingChange: () => this.ws?.close() });
         await new Promise(r => this.lan.once('listening', r));
         // apka szuka noda po nazwie sensmos-<id>.local i mówi do portu 80 (jak do płytki)
@@ -81,6 +82,8 @@ class Hub {
             this.ha = new ha.HaSensors({ cfg: haCfg, log: this.log, everyS: this.cfg.haEveryS || 60 }).start();
             // Ramki LoRa jako czujniki w HA (sensor.sensmos_lora_*), bez integracji z HACS. HUB_LORA_HA=0 wyłącza.
             if (this.cfg.loraHa !== false) this.haLora = new HaLora({ cfg: haCfg, lora: this.lora, log: this.log, everyS: this.cfg.loraHaEveryS || 300 }).start();
+            // Most Meshtastic (POST /meshtastic) → sensor.meshtastic_* i zdarzenie sensmos_meshtastic_message. HUB_MESHTASTIC=0 wyłącza.
+            if (this.cfg.meshtastic !== false) this.mesh = new Meshtastic({ dir: this.cfg.data, cfg: haCfg, log: this.log }).start();
         } else this.log('HA: no access to Home Assistant (Docker: HUB_HA_URL + HUB_HA_TOKEN in .env) — sensors off');
         // Udostępnione czujniki co dataS: zapis do historii lokalnej zawsze, wysyłka do sieci gdy jest połączenie
         // (ten sam batch co ESP32, kanał szyfrowany, BE: onBatch → batch.js).
@@ -129,6 +132,7 @@ class Hub {
         this.lan?.close();
         this.ha?.stop();
         this.haLora?.stop();
+        this.mesh?.stop();
         clearInterval(this.dataT);
         this.mdns?.stop();
         this.events.stop();

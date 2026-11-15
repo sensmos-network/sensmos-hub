@@ -11,6 +11,7 @@ const cfg = {
     pin: process.env.HUB_PIN || '',
     loraKey: process.env.HUB_LORA_KEY || '',
     loraHa: !/^(0|false|no|off)$/i.test(process.env.HUB_LORA_HA || ''),
+    meshtastic: !/^(0|false|no|off)$/i.test(process.env.HUB_MESHTASTIC || ''),
 };
 
 // `diag`: paczka diagnostyczna z katalogu danych (działa też obok uruchomionego hubu).

@@ -158,6 +158,25 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`, `nível da água`) with a unit of cm, m or mm goes to
   the network as `water_level` in cm. Neighbours who turned on the water alert in the app get a notification when it
   rises fast near them. It only says the station's pseudonym and distance, never who you are.
+- **Meshtastic bridge (0.2.0-beta6):** Meshtastic messages and sensors in Home Assistant, without the hub transmitting
+  anything. Turn on MQTT with **JSON enabled** on a Meshtastic node with Wi-Fi and point it at the Home Assistant
+  broker, then add the automation below. Every text message becomes `sensor.meshtastic_<id>` and the event
+  `sensmos_meshtastic_message` (`node`, `name`, `text`, `channel`, `rssi`, `snr`); telemetry becomes
+  `sensor.meshtastic_<id>_t`, `_h`, `_p`, `_bat`, `_v`, `_lux`. Positions are not stored. `HUB_MESHTASTIC=0` turns it off.
+
+  ```yaml
+  rest_command:
+    sensmos_meshtastic:
+      url: "http://127.0.0.1:80/meshtastic"        # add-on; Docker: http://<hub-ip>:<HUB_PORT>/meshtastic
+      method: POST
+      headers: { Authorization: "Bearer 123456" }  # the hub PIN
+      content_type: application/json
+      payload: "{{ payload }}"
+  automation:
+    - alias: Meshtastic to Sensmos Hub
+      trigger: { platform: mqtt, topic: "msh/+/2/json/#" }
+      action: { service: rest_command.sensmos_meshtastic, data: { payload: "{{ trigger.payload }}" } }
+  ```
 - **Same API as a board:** `/info` carries a `lora` field, and `/lora/inbox`, `/node/lora_rx`,
   `/node/lora_emerg` answer like the firmware, so the app's LoRa screen and the Sensmos integration for HA
   (LoRa DATA frame sensors) work with the hub too. `/node/lorasend` sends a frame through the network

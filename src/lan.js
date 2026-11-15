@@ -1,12 +1,13 @@
 // HTTP w LAN — to, czego używa apka przy nodzie: PIN (Bearer), /info, /config, /node/pair.
 // Dane: /data/status, /data/native (format płytki, udostępnione czujniki z HA), /data/history (7 dni lokalnie).
 // LoRa jak w płytce (bez radia): /lora/inbox, /node/lora_rx, /node/lorasend (przez sieć), /node/lora_emerg (puste).
+// Most Meshtastic: POST /meshtastic (wiadomość JSON z MQTT Meshtastic, przekazana przez automatyzację HA).
 // Reszta API płytki (skrypty) nie istnieje w hubie i odpowiada 404.
 const http = require('http');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
-function start({ port, pin, identity, pairing, firmware, owner, onOwner, sensors, shared, data, history, lora, connected, log, onPairingChange }) {
+function start({ port, pin, identity, pairing, firmware, owner, onOwner, sensors, shared, data, history, lora, mesh, connected, log, onPairingChange }) {
     const ownerOf = () => String((typeof owner === 'function' ? owner() : owner) || '').toLowerCase();
     const tries = new Map();   // adres → { fails, lockUntil }: blokada per nadawca, nie dla całego LAN-u
     const json = (res, code, obj) => {
@@ -141,6 +142,14 @@ function start({ port, pin, identity, pairing, firmware, owner, onOwner, sensors
             if (!checkPin(req, res)) return;
             if (req.method === 'GET') return json(res, 200, { eids: [], active: false, webhook: '', webhook_get: false });
             return json(res, 400, { error: 'no radio' });
+        }
+        // Most Meshtastic: automatyzacja HA przekazuje tu wiadomości JSON z MQTT Meshtastic (src/meshtastic.js).
+        if (mesh && url === '/meshtastic' && req.method === 'POST') {
+            if (!checkPin(req, res)) return;
+            const b = await body(req);
+            if (!b) return json(res, 400, { error: 'bad json' });
+            const r = await mesh.ingest(b);
+            return json(res, r.error ? 503 : 200, r);
         }
         json(res, 404, { error: 'not found' });
     });
