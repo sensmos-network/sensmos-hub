@@ -1029,6 +1029,121 @@
           "went silent"
         ]
       }
+    },
+    {
+      "id": "hub-020-esphome",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta7",
+      "hardware": {
+        "hub": true,
+        "ha": true,
+        "lora": true
+      },
+      "points": 10,
+      "limit_testers": 10,
+      "title": {
+        "en": "Hub: plain ESPHome board over the Sensmos network",
+        "pl": "Hub: zwykła płytka ESPHome przez sieć Sensmos",
+        "de": "Hub: normales ESPHome-Board über das Sensmos-Netz",
+        "pt": "Hub: placa ESPHome comum pela rede Sensmos"
+      },
+      "steps": {
+        "en": [
+          "Install the beta add-on Sensmos Hub 0.2.0-beta7. Flash a board with SX1262 (Heltec V3 or similar) with examples/lora-zwykle-esphome.yaml from github.com/sensmos-network/sensmos-esphome (stock ESPHome only; a board without BME280 still sends voltage and the door contact). Change the encryption string.",
+          "In the add-on options set esphome_lora to dzialka-czujnik=20:<the same string> and restart the add-on. The log shows `ESPHome LoRa: the network delivers frames of 1 board(s)`.",
+          "Within 10 minutes Home Assistant has sensor.sensmos_lora_20_v (and _t, _h with a BME280) and the hub log shows `ESPHome LoRa: dzialka-czujnik → sub 20`. Open and close the door contact: sensor.sensmos_lora_20_drzwi changes within a minute.",
+          "Send the package with `--scenario hub-020-esphome --result ok`, or `--result fail` with what you saw."
+        ],
+        "pl": [
+          "Zainstaluj dodatek beta Sensmos Hub 0.2.0-beta7. Wgraj na płytkę z SX1262 (Heltec V3 albo podobna) examples/lora-zwykle-esphome.yaml z github.com/sensmos-network/sensmos-esphome (samo ESPHome; płytka bez BME280 i tak nadaje napięcie i kontaktron). Zmień hasło w encryption.",
+          "W opcjach dodatku wpisz esphome_lora = dzialka-czujnik=20:<to samo hasło> i zrestartuj dodatek. W logu jest `ESPHome LoRa: the network delivers frames of 1 board(s)`.",
+          "W ciągu 10 minut w Home Assistant jest sensor.sensmos_lora_20_v (a z BME280 też _t i _h), a w logu Huba `ESPHome LoRa: dzialka-czujnik → sub 20`. Otwórz i zamknij kontaktron: sensor.sensmos_lora_20_drzwi zmienia się w ciągu minuty.",
+          "Wyślij paczkę z `--scenario hub-020-esphome --result ok` albo `--result fail` z opisem, co widzisz."
+        ],
+        "de": [
+          "Installiere das Beta-Add-on Sensmos Hub 0.2.0-beta7. Flashe ein Board mit SX1262 (Heltec V3 oder ähnlich) mit examples/lora-zwykle-esphome.yaml aus github.com/sensmos-network/sensmos-esphome (nur Standard-ESPHome; ohne BME280 sendet es trotzdem Spannung und Türkontakt). Ändere das encryption-Passwort.",
+          "Setz in den Add-on-Optionen esphome_lora = dzialka-czujnik=20:<dasselbe Passwort> und starte das Add-on neu. Im Log steht `ESPHome LoRa: the network delivers frames of 1 board(s)`.",
+          "Innerhalb von 10 Minuten hat Home Assistant sensor.sensmos_lora_20_v (mit BME280 auch _t und _h) und im Hub-Log steht `ESPHome LoRa: dzialka-czujnik → sub 20`. Öffne und schließe den Türkontakt: sensor.sensmos_lora_20_drzwi ändert sich innerhalb einer Minute.",
+          "Sende das Paket mit `--scenario hub-020-esphome --result ok` oder `--result fail` mit deiner Beobachtung."
+        ],
+        "pt": [
+          "Instale o add-on beta Sensmos Hub 0.2.0-beta7. Grave numa placa com SX1262 (Heltec V3 ou semelhante) o examples/lora-zwykle-esphome.yaml de github.com/sensmos-network/sensmos-esphome (só ESPHome padrão; sem BME280 a placa envia na mesma a tensão e o contacto da porta). Mude o segredo em encryption.",
+          "Nas opções do add-on defina esphome_lora = dzialka-czujnik=20:<o mesmo segredo> e reinicie o add-on. O registo mostra `ESPHome LoRa: the network delivers frames of 1 board(s)`.",
+          "Em 10 minutos o Home Assistant tem sensor.sensmos_lora_20_v (com BME280 também _t e _h) e o registo do hub mostra `ESPHome LoRa: dzialka-czujnik → sub 20`. Abra e feche o contacto da porta: sensor.sensmos_lora_20_drzwi muda em menos de um minuto.",
+          "Envie o pacote com `--scenario hub-020-esphome --result ok`, ou `--result fail` com o que viu."
+        ]
+      },
+      "expected": {
+        "en": "Readings of a board with stock ESPHome only show up in HA as sensor.sensmos_lora_20_*, delivered by Sensmos nodes.",
+        "pl": "Odczyty płytki z samym ESPHome pojawiają się w HA jako sensor.sensmos_lora_20_*, dowiezione przez nody Sensmos.",
+        "de": "Messwerte eines Boards nur mit Standard-ESPHome erscheinen in HA als sensor.sensmos_lora_20_*, geliefert von Sensmos-Nodes.",
+        "pt": "As leituras de uma placa só com ESPHome padrão aparecem no HA como sensor.sensmos_lora_20_*, entregues pelos nodes Sensmos."
+      },
+      "auto_check": {
+        "component": "hub",
+        "version_prefix": "hub-0.2",
+        "package": true,
+        "events_any": [
+          "ESPHome LoRa: "
+        ]
+      }
+    },
+    {
+      "id": "hub-020-shelly",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta2",
+      "hardware": {
+        "hub": true,
+        "lora": true
+      },
+      "points": 5,
+      "limit_testers": 5,
+      "title": {
+        "en": "Do Sensmos nodes hear a Shelly LoRa add-on?",
+        "pl": "Czy nody Sensmos słyszą Shelly z dodatkiem LoRa?",
+        "de": "Hören Sensmos-Nodes ein Shelly mit LoRa-Add-on?",
+        "pt": "Os nodes Sensmos ouvem um Shelly com add-on LoRa?"
+      },
+      "steps": {
+        "en": [
+          "You need a Shelly Gen3/Gen4 with the Shelly LoRa add-on and a Sensmos Hub. In the Sensmos app open the hub card → LoRa and allow plain frames for the test.",
+          "In the Shelly web UI open Scripts → Create script, paste the line below, put your hub's 8-character id in HUB and run it once: let HUB = \"a1b2c3d4\", SUB = 30, TXT = \"shelly=1\"; function crc32(s) { let c = 0xFFFFFFFF; for (let i = 0; i < s.length; i++) { c ^= s.charCodeAt(i); for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); } return (c ^ 0xFFFFFFFF) >>> 0; } function u32(x) { return String.fromCharCode(x & 255, (x >>> 8) & 255, (x >>> 16) & 255, (x >>> 24) & 255); } let f = String.fromCharCode(0xE0, 0x02, 0); for (let i = 0; i < 8; i += 2) f += String.fromCharCode(parseInt(HUB.substr(i, 2), 16)); f += String.fromCharCode(SUB) + TXT + u32(crc32(TXT)); Shelly.call(\"LoRa.SetConfig\", { id: 100, config: { freq: 868100000, bw: 125, dr: 11, cr: 5, plen: 8, txp: 14 } }, function () { Shelly.call(\"LoRa.SendBytes\", { id: 100, data: btoa(f) }, function (r, e, m) { print(\"sent\", e, m); }); });",
+          "Within a minute the hub log should show `LoRa: frame sub 30` and Home Assistant gets sensor.sensmos_lora_30_shelly = 1. If nothing comes, run it twice more near a Sensmos node.",
+          "Send the package with `--scenario hub-020-shelly --result ok` if the frame came, `--result fail` if not (that is a useful answer too). Turn plain frames off again afterwards."
+        ],
+        "pl": [
+          "Potrzebujesz Shelly Gen3/Gen4 z dodatkiem Shelly LoRa i Sensmos Huba. W apce Sensmos otwórz kartę Huba → LoRa i na czas testu zezwól na jawne ramki.",
+          "W panelu Shelly otwórz Scripts → Create script, wklej linię poniżej, wpisz w HUB 8-znakowe id swojego Huba i uruchom raz: let HUB = \"a1b2c3d4\", SUB = 30, TXT = \"shelly=1\"; function crc32(s) { let c = 0xFFFFFFFF; for (let i = 0; i < s.length; i++) { c ^= s.charCodeAt(i); for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); } return (c ^ 0xFFFFFFFF) >>> 0; } function u32(x) { return String.fromCharCode(x & 255, (x >>> 8) & 255, (x >>> 16) & 255, (x >>> 24) & 255); } let f = String.fromCharCode(0xE0, 0x02, 0); for (let i = 0; i < 8; i += 2) f += String.fromCharCode(parseInt(HUB.substr(i, 2), 16)); f += String.fromCharCode(SUB) + TXT + u32(crc32(TXT)); Shelly.call(\"LoRa.SetConfig\", { id: 100, config: { freq: 868100000, bw: 125, dr: 11, cr: 5, plen: 8, txp: 14 } }, function () { Shelly.call(\"LoRa.SendBytes\", { id: 100, data: btoa(f) }, function (r, e, m) { print(\"sent\", e, m); }); });",
+          "W ciągu minuty w logu Huba powinno być `LoRa: frame sub 30`, a w Home Assistant sensor.sensmos_lora_30_shelly = 1. Jeśli nic nie przyjdzie, uruchom jeszcze dwa razy blisko noda Sensmos.",
+          "Wyślij paczkę z `--scenario hub-020-shelly --result ok`, gdy ramka doszła, albo `--result fail`, gdy nie (to też przydatna odpowiedź). Potem wyłącz jawne ramki."
+        ],
+        "de": [
+          "Du brauchst ein Shelly Gen3/Gen4 mit dem Shelly-LoRa-Add-on und einen Sensmos Hub. Öffne in der Sensmos-App die Hub-Karte → LoRa und erlaube für den Test Klartext-Frames.",
+          "Öffne in der Shelly-Weboberfläche Scripts → Create script, füge die Zeile unten ein, trag bei HUB die 8-stellige Id deines Hubs ein und starte es einmal: let HUB = \"a1b2c3d4\", SUB = 30, TXT = \"shelly=1\"; function crc32(s) { let c = 0xFFFFFFFF; for (let i = 0; i < s.length; i++) { c ^= s.charCodeAt(i); for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); } return (c ^ 0xFFFFFFFF) >>> 0; } function u32(x) { return String.fromCharCode(x & 255, (x >>> 8) & 255, (x >>> 16) & 255, (x >>> 24) & 255); } let f = String.fromCharCode(0xE0, 0x02, 0); for (let i = 0; i < 8; i += 2) f += String.fromCharCode(parseInt(HUB.substr(i, 2), 16)); f += String.fromCharCode(SUB) + TXT + u32(crc32(TXT)); Shelly.call(\"LoRa.SetConfig\", { id: 100, config: { freq: 868100000, bw: 125, dr: 11, cr: 5, plen: 8, txp: 14 } }, function () { Shelly.call(\"LoRa.SendBytes\", { id: 100, data: btoa(f) }, function (r, e, m) { print(\"sent\", e, m); }); });",
+          "Innerhalb einer Minute sollte im Hub-Log `LoRa: frame sub 30` stehen und Home Assistant bekommt sensor.sensmos_lora_30_shelly = 1. Kommt nichts, starte es noch zweimal nahe an einer Sensmos-Node.",
+          "Sende das Paket mit `--scenario hub-020-shelly --result ok`, wenn der Frame ankam, oder `--result fail`, wenn nicht (auch das ist eine nützliche Antwort). Schalte danach die Klartext-Frames wieder aus."
+        ],
+        "pt": [
+          "Precisa de um Shelly Gen3/Gen4 com o add-on Shelly LoRa e de um Sensmos Hub. Na app Sensmos abra o cartão do hub → LoRa e, durante o teste, permita tramas em claro.",
+          "Na interface web do Shelly abra Scripts → Create script, cole a linha abaixo, ponha em HUB o id de 8 caracteres do seu hub e execute uma vez: let HUB = \"a1b2c3d4\", SUB = 30, TXT = \"shelly=1\"; function crc32(s) { let c = 0xFFFFFFFF; for (let i = 0; i < s.length; i++) { c ^= s.charCodeAt(i); for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); } return (c ^ 0xFFFFFFFF) >>> 0; } function u32(x) { return String.fromCharCode(x & 255, (x >>> 8) & 255, (x >>> 16) & 255, (x >>> 24) & 255); } let f = String.fromCharCode(0xE0, 0x02, 0); for (let i = 0; i < 8; i += 2) f += String.fromCharCode(parseInt(HUB.substr(i, 2), 16)); f += String.fromCharCode(SUB) + TXT + u32(crc32(TXT)); Shelly.call(\"LoRa.SetConfig\", { id: 100, config: { freq: 868100000, bw: 125, dr: 11, cr: 5, plen: 8, txp: 14 } }, function () { Shelly.call(\"LoRa.SendBytes\", { id: 100, data: btoa(f) }, function (r, e, m) { print(\"sent\", e, m); }); });",
+          "Em um minuto o registo do hub deve mostrar `LoRa: frame sub 30` e o Home Assistant recebe sensor.sensmos_lora_30_shelly = 1. Se nada chegar, execute mais duas vezes perto de um node Sensmos.",
+          "Envie o pacote com `--scenario hub-020-shelly --result ok` se a trama chegou, ou `--result fail` se não (também é uma resposta útil). Depois desligue de novo as tramas em claro."
+        ]
+      },
+      "expected": {
+        "en": "We learn whether the Shelly LoRa add-on can reach Sensmos nodes on the home channel, so Shelly devices could report through the network.",
+        "pl": "Dowiemy się, czy dodatek Shelly LoRa trafia do nodów Sensmos na kanale domowym, czyli czy Shelly mogą raportować przez sieć.",
+        "de": "Wir erfahren, ob das Shelly-LoRa-Add-on Sensmos-Nodes auf dem Heimkanal erreicht, ob Shellys also über das Netz melden könnten.",
+        "pt": "Ficamos a saber se o add-on Shelly LoRa chega aos nodes Sensmos no canal doméstico, ou seja, se os Shelly podem reportar pela rede."
+      },
+      "auto_check": {
+        "component": "hub",
+        "version_prefix": "hub-0.2",
+        "package": true,
+        "events_any": [
+          "LoRa: frame sub 30"
+        ]
+      }
     }
   ]
 }
