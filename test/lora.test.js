@@ -229,6 +229,12 @@ test('toStates: soil = wilgotność gleby w %, kg = waga (szklarnia, pasieka)', 
     assert.deepStrictEqual([by['sensor.sensmos_lora_10_kg'].device_class, by['sensor.sensmos_lora_10_kg'].unit_of_measurement, by['sensor.sensmos_lora_10_kg'].state_class], ['weight', 'kg', 'measurement']);
 });
 
+test('toStates: t2 i h2 (druga sonda) mają klasę jak t i h', () => {
+    const by = Object.fromEntries(toStates({ sub: 12, text: 't=3.2;t2=-19.5;door=0' }).map(x => [x.entity_id, x.attributes]));
+    assert.deepStrictEqual([by['sensor.sensmos_lora_12_t2'].device_class, by['sensor.sensmos_lora_12_t2'].unit_of_measurement], ['temperature', '°C']);
+    assert.strictEqual(by['sensor.sensmos_lora_12_door'].device_class, undefined);
+});
+
 test('toStates: liczniki (kwh, m3, gas) narastające do panelu Energia, moc chwilowa jako pomiar', () => {
     const s = toStates({ sub: 5, text: 'kwh=1234.567;w=830;m3=56.789;gas=12.3' });
     const by = Object.fromEntries(s.map(x => [x.entity_id, x.attributes]));

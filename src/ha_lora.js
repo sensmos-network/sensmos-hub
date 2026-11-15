@@ -70,7 +70,8 @@ function toStates(it, { id8 } = {}) {
             ...(it.hex ? { hex: it.hex } : {}), ...(Object.keys(values).length ? { values } : {}) },
     }];
     for (const [k, v] of Object.entries(values)) {
-        const [device_class, unit, state_class = 'measurement'] = KEYS[k] || [];
+        // t2, t3, h2…: druga i kolejna sonda tego samego rodzaju dostaje tę samą klasę (chłodnia + zamrażarka).
+        const [device_class, unit, state_class = 'measurement'] = KEYS[k] || KEYS[k.replace(/[2-9]$/, '')] || [];
         const num = typeof v === 'number';
         out.push({
             entity_id: `${base}_${k}`,
