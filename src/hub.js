@@ -20,6 +20,7 @@ const { HaLora } = require('./ha_lora');
 const { Meshtastic } = require('./meshtastic');
 const { LoRaWan } = require('./lorawan');
 const { EspHomeLora } = require('./esphome_lora');
+const hubAttest = require('./attest');
 
 const FIRMWARE = 'hub-' + require('../package.json').version;
 const OWNER_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -281,6 +282,32 @@ class Hub {
         this.send({ type: 'ping', device_id: this.id.id, free, largest: free });
     }
 
+    // Potwierdzenie Huba bez apki (0.2.0-beta8): sensmos.com/my w telefonie w tej samej sieci prosi BE, a BE
+    // przekazuje prośbę tym kanałem. Hub podpisuje ten sam atest co w LAN /attest, ale tylko z poprawnym PIN-em
+    // (wpisanym przez właściciela na stronie). 5 złych PIN-ów = 15 min blokady. BE i tak sprawdza jeszcze
+    // podpis portfela właściciela i to, że telefon wychodzi do internetu z tego samego adresu co Hub.
+    onAttestReq(m) {
+        const rid = String(m.rid || '');
+        if (!/^[0-9a-f]{16,64}$/.test(rid)) return;
+        const reply = o => this.send({ type: 'attest_res', rid, ...o });
+        const now = Date.now();
+        if (this.attLockUntil && now < this.attLockUntil) return reply({ error: 'too_many_attempts' });
+        const pin = Buffer.from(String(m.pin || '')), mine = Buffer.from(String(this.pin));
+        if (pin.length !== mine.length || !crypto.timingSafeEqual(pin, mine)) {
+            this.attFails = (this.attFails || 0) + 1;
+            if (this.attFails >= 5) { this.attFails = 0; this.attLockUntil = now + 15 * 60e3; }
+            this.log('confirmation from sensmos.com/my: wrong PIN');
+            return reply({ error: 'bad_pin' });
+        }
+        this.attFails = 0;
+        if (!this.cfg.owner) return reply({ error: 'no_owner' });
+        const bad = hubAttest.check(m.seed, m.gps_lat, m.gps_lon);
+        if (bad) return reply({ error: bad });
+        const attest = hubAttest.build(this.id.id, this.cfg.owner, m.seed, String(m.gps_lat), String(m.gps_lon));
+        this.log('confirmation from sensmos.com/my: attestation signed (hub rewards)');
+        return reply({ attest, sig: this.id.sign(attest) });
+    }
+
     handle(m) {
         this.emit('message', m);
         if (this.debug && m.type !== 'check_jobs') this.log('BE →', m.type);
@@ -303,6 +330,7 @@ class Hub {
             case 'deleted': return this.onIdentified({ status: 'deleted' });
             case 'ota': this.log('OTA does not apply to the hub (update = new Docker image)'); return;
             case 'message': this.log('message:', JSON.stringify(m).slice(0, 200)); return;
+            case 'attest_req': return this.onAttestReq(m);
             default:
                 if (this.debug) this.log('BE →', m.type, JSON.stringify(m).slice(0, 300));
                 else if (!QUIET.has(m.type) && !this.seen.has(m.type)) { this.seen.add(m.type); this.log('unhandled type from backend:', m.type); }

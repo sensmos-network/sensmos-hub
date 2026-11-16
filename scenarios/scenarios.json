@@ -1267,6 +1267,62 @@
         "pt": "O 0.19-kom arranca, desce por USB para 0.16-kom e volta, e o ID e a chave sobrevivem às duas gravações."
       },
       "auto_check": {}
+    },
+    {
+      "id": "hub-020-confirm-web",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta8",
+      "hardware": {
+        "hub": true
+      },
+      "points": 3,
+      "limit_testers": 10,
+      "title": {
+        "en": "Hub: confirm the hub from the browser (no Android)",
+        "pl": "Hub: potwierdzenie Huba w przeglądarce (bez Androida)",
+        "de": "Hub: Hub im Browser bestätigen (ohne Android)",
+        "pt": "Hub: confirmar o hub no navegador (sem Android)"
+      },
+      "steps": {
+        "en": [
+          "Run Sensmos Hub 0.2.0-beta8 (Docker or the beta add-on), added to your wallet and online, but not confirmed yet. Note the hub PIN from its log (`Hub PIN: ...`).",
+          "On a phone on the same Wi-Fi as the hub, open sensmos.com/my in the MetaMask app (on iPhone use the MetaMask app's own browser), connect the wallet that owns the hub and open the hub.",
+          "Tap Confirm hub, allow location, enter the PIN and sign once in MetaMask. The page says the hub is confirmed and the hub log shows `attestation signed`.",
+          "Send the package with `--scenario hub-020-confirm-web --result ok` (or `fail` with the step and the exact message on the page)."
+        ],
+        "pl": [
+          "Uruchom Sensmos Hub 0.2.0-beta8 (Docker albo dodatek beta), dodany do portfela i online, ale jeszcze niepotwierdzony. Zapisz PIN Huba z jego logu (`Hub PIN: ...`).",
+          "Na telefonie w tym samym WiFi co Hub otwórz sensmos.com/my w aplikacji MetaMask (na iPhonie w przeglądarce wbudowanej w MetaMask), połącz portfel, do którego należy Hub, i otwórz Huba.",
+          "Stuknij Potwierdź Huba, zezwól na lokalizację, wpisz PIN i podpisz raz w MetaMasku. Strona pokazuje, że Hub jest potwierdzony, a w logu Huba jest `attestation signed`.",
+          "Wyślij paczkę z `--scenario hub-020-confirm-web --result ok` (albo `fail` z krokiem i dokładnym komunikatem ze strony)."
+        ],
+        "de": [
+          "Starte Sensmos Hub 0.2.0-beta8 (Docker oder das Beta-Add-on), deiner Wallet hinzugefügt und online, aber noch nicht bestätigt. Notiere die Hub-PIN aus seinem Log (`Hub PIN: ...`).",
+          "Öffne auf einem Telefon im selben WLAN wie der Hub sensmos.com/my in der MetaMask-App (auf dem iPhone im Browser der MetaMask-App), verbinde die Wallet, der der Hub gehört, und öffne den Hub.",
+          "Tippe auf Hub bestätigen, erlaube den Standort, gib die PIN ein und signiere einmal in MetaMask. Die Seite zeigt, dass der Hub bestätigt ist, und im Hub-Log steht `attestation signed`.",
+          "Sende das Paket mit `--scenario hub-020-confirm-web --result ok` (oder `fail` mit dem Schritt und der genauen Meldung der Seite)."
+        ],
+        "pt": [
+          "Rode o Sensmos Hub 0.2.0-beta8 (Docker ou o add-on beta), adicionado à sua carteira e online, mas ainda não confirmado. Anote o PIN do hub no log dele (`Hub PIN: ...`).",
+          "Num telefone no mesmo WiFi do hub, abra sensmos.com/my no app MetaMask (no iPhone use o navegador do próprio app MetaMask), conecte a carteira dona do hub e abra o hub.",
+          "Toque em Confirmar hub, permita a localização, digite o PIN e assine uma vez no MetaMask. A página diz que o hub está confirmado e o log do hub mostra `attestation signed`.",
+          "Envie o pacote com `--scenario hub-020-confirm-web --result ok` (ou `fail` com o passo e a mensagem exata da página)."
+        ]
+      },
+      "expected": {
+        "en": "The page confirms the hub, My Sensmos no longer shows it as not confirmed, and the hub log has `attestation signed`.",
+        "pl": "Strona potwierdza Huba, Mój Sensmos nie pokazuje go już jako niepotwierdzonego, a w logu Huba jest `attestation signed`.",
+        "de": "Die Seite bestätigt den Hub, Mein Sensmos zeigt ihn nicht mehr als unbestätigt, und im Hub-Log steht `attestation signed`.",
+        "pt": "A página confirma o hub, Meu Sensmos já não o mostra como não confirmado e o log do hub tem `attestation signed`."
+      },
+      "auto_check": {
+        "component": "hub",
+        "version_prefix": "hub-0.2",
+        "package": true,
+        "events_any": [
+          "attestation signed"
+        ]
+      }
     }
   ]
 }

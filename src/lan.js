@@ -4,6 +4,7 @@
 // Most Meshtastic: POST /meshtastic (wiadomość JSON z MQTT Meshtastic, przekazana przez automatyzację HA).
 // Reszta API płytki (skrypty) nie istnieje w hubie i odpowiada 404.
 const http = require('http');
+const hubAttest = require('./attest');
 
 const LOCK_AFTER = 5, LOCK_MS = 30_000;
 
@@ -110,9 +111,10 @@ function start({ port, pin, identity, pairing, firmware, owner, onOwner, sensors
             if (!checkPin(req, res)) return;
             const b = await body(req);
             const seed = String(b?.seed || ''), lat = String(b?.gps_lat ?? ''), lon = String(b?.gps_lon ?? '');
-            if (!/^[0-9a-f]{64}$/.test(seed)) return json(res, 400, { error: 'seed must be 64 hex chars' });
-            if (!/^-?\d{1,3}(\.\d{1,7})?$/.test(lat) || !/^-?\d{1,3}(\.\d{1,7})?$/.test(lon)) return json(res, 400, { error: 'gps_lat/gps_lon as decimal strings' });
-            const attest = `{"v":1,"kind":"hub","device_id":"${identity.id}","owner":"${ownerOf()}","seed":"${seed}","gps_lat":"${lat}","gps_lon":"${lon}"}`;
+            const bad = hubAttest.check(seed, lat, lon);
+            if (bad === 'bad_seed') return json(res, 400, { error: 'seed must be 64 hex chars' });
+            if (bad) return json(res, 400, { error: 'gps_lat/gps_lon as decimal strings' });
+            const attest = hubAttest.build(identity.id, ownerOf(), seed, lat, lon);
             log('atest LAN podpisany dla apki (nagrody Huba)');
             return json(res, 200, { attest, sig: identity.sign(attest), device_id: identity.id });
         }

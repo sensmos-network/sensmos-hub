@@ -66,6 +66,11 @@ From 0.1.2 a confirmed hub receives GALU at half the weight of an ESP32 node. Co
 Sensmos app (beta 1.6.4 or newer): hub card → **Confirm hub**, with the phone on the same Wi-Fi as
 this Home Assistant. Several hubs behind one internet address share one hub allocation.
 
+No Android phone (iPhone)? From 0.2.0-beta8 you can confirm it in the browser: open
+[sensmos.com/my](https://sensmos.com/my/) in the MetaMask app, on the same Wi-Fi as this Home Assistant, open
+the hub and tap **Confirm hub**. Enter the hub PIN (the add-on log shows it at start: `Hub PIN: ...`)
+and sign once in MetaMask. The request reaches the hub through its own connection to the network.
+
 ## Reporting
 
 Something broke? Send a diagnostic package from the add-on terminal or report it on

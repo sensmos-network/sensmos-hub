@@ -17,6 +17,13 @@ signs it with the wallet and sends the phone's location; the backend accepts it 
 and the hub reach the internet from the same address. Several hubs behind one address share one
 hub allocation.
 
+**No Android phone (from 0.2.0-beta8):** confirm the hub in the browser instead. Open
+[sensmos.com/my](https://sensmos.com/my/) in the MetaMask app (iPhone works) on the same Wi-Fi as the hub,
+open the hub and tap **Confirm hub**, enter the hub PIN (`docker compose logs hub | grep PIN`) and sign once
+in MetaMask. The page cannot reach the hub in your LAN, so the backend passes the request to the hub over the
+hub's own encrypted connection (`attest_req`); the hub signs the same challenge only with the right PIN
+(5 wrong PINs lock it for 15 minutes), and the backend still checks the wallet signature and the same address.
+
 ## What you need
 
 - Docker with Compose on a machine that is always on, in the same LAN as the devices you want to reach.
