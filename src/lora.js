@@ -70,6 +70,17 @@ function encode(dst8, sub, payload, key = null, nonce = crypto.randomBytes(NONCE
     return (key ? Buffer.concat([hdr, nonce, ctr(key, nonce, dst, sub, body)]) : Buffer.concat([hdr, body])).toString('hex');
 }
 
+// „Gdzie jest mój tag”: kto usłyszał ramkę. Tylko poprawne wartości: to przyszło z sieci, a trafia do HA.
+function heard(it, m) {
+    if (!m || !/^[0-9a-f]{8}$/.test(String(m.rx || ''))) return it;
+    it.rx = m.rx;
+    if (Number.isFinite(m.rssi) && m.rssi) it.rssi = m.rssi;
+    if (Number.isFinite(m.snr) && m.snr) it.snr = m.snr;
+    const n = m.near;
+    if (n && Number.isFinite(n.lat) && Number.isFinite(n.lon) && Math.abs(n.lat) <= 90 && Math.abs(n.lon) <= 180) it.near = { lat: n.lat, lon: n.lon };
+    return it;
+}
+
 function item(fr, ts, via) {
     const it = { ts, sub: fr.sub, enc: fr.enc, via };
     if (isText(fr.payload)) it.text = fr.payload.toString('latin1'); else it.hex = fr.payload.toString('hex');
@@ -121,8 +132,9 @@ class Lora {
 
     inbox() { return { cmds: { count: 0, items: [] }, frames: { count: this.frames.length, items: this.frames } }; }
 
-    // `lora_frame` z BE. Zwraca wpis albo null (nie do nas, bez klucza, powtórka…).
-    onWs(hex, now = Math.floor(Date.now() / 1000)) {
+    // `lora_frame` z BE. Zwraca wpis albo null (nie do nas, bez klucza, powtórka…). meta (BE dla Huba, 0.2.0-beta7):
+    // rx = id8 noda, który usłyszał ramkę, rssi/snr tego odbioru, near = jego pozycja zaokrąglona do ok. 1 km.
+    onWs(hex, now = Math.floor(Date.now() / 1000), meta = {}) {
         const fr = decode(hex, this.id8, this.key, this.open);
         if (fr.err) {
             // Log raz na przyczynę: zły klucz u czujnika potrafi przysyłać ramki co minutę.
@@ -140,6 +152,7 @@ class Lora {
         if (prev !== undefined && now - prev < DEDUP_S) return null;
         delete this.drops.crc_key; delete this.drops.no_key;   // po poprawce klucza kolejny błąd znów trafi do logu
         const it = item(fr, now, 'ws');
+        heard(it, meta);
         // Zwykły odstęp czujnika: najdłuższy z ostatnich GAPS odstępów między ramkami. Z niego Hub liczy, kiedy czujnik
         // „zamilkł” (ha_lora). Najdłuższy, nie ostatni: czujnik na zdarzenia (skrzynka, auto) nadaje dwie ramki
         // w 5 minut, a potem tylko znak życia co 12 h, i krótki odstęp nie może dać alarmu ciszy po godzinie.

@@ -69,6 +69,14 @@ function toStates(it, { id8 } = {}) {
         attributes: { ...common, friendly_name: label, icon: 'mdi:radio-tower', ...(number != null ? { state_class: 'measurement' } : {}),
             ...(it.hex ? { hex: it.hex } : {}), ...(Object.keys(values).length ? { values } : {}) },
     }];
+    // „Gdzie jest mój tag” (0.2.0-beta7): który nod usłyszał ostatnią ramkę; z pozycją widać go na mapie HA.
+    if (it.rx) out.push({
+        entity_id: `${base}_heard`,
+        state: it.rx,
+        attributes: { ...common, friendly_name: `${label} heard by`, icon: 'mdi:map-marker-radius',
+            ...(it.rssi ? { rssi: it.rssi } : {}), ...(it.snr ? { snr: it.snr } : {}),
+            ...(it.near ? { latitude: it.near.lat, longitude: it.near.lon, gps_accuracy: 1000 } : {}) },
+    });
     for (const [k, v] of Object.entries(values)) {
         // t2, t3, h2…: druga i kolejna sonda tego samego rodzaju dostaje tę samą klasę (chłodnia + zamrażarka).
         const [device_class, unit, state_class = 'measurement'] = KEYS[k] || KEYS[k.replace(/[2-9]$/, '')] || [];
@@ -124,7 +132,7 @@ class HaLora {
         const ok = await this.write(it, it.ts || undefined);
         if (!ok) return false;
         try {
-            await this.post('/api/events/sensmos_lora_frame', { node_id: this.lora.deviceId, sub: it.sub, text: it.text ?? null, hex: it.hex ?? null, enc: !!it.enc, via: it.via, ts: it.ts });
+            await this.post('/api/events/sensmos_lora_frame', { node_id: this.lora.deviceId, sub: it.sub, text: it.text ?? null, hex: it.hex ?? null, enc: !!it.enc, via: it.via, ts: it.ts, ...(it.rx ? { rx: it.rx } : {}), ...(it.near ? { near: it.near } : {}) });
             const k = String(it.sub);
             if (this.silent.has(k)) {
                 await this.post('/api/events/sensmos_lora_back', { node_id: this.lora.deviceId, sub: it.sub, ts: it.ts, silent_s: it.gap || null });

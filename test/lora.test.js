@@ -245,3 +245,23 @@ test('toStates: liczniki (kwh, m3, gas) narastające do panelu Energia, moc chwi
     // Stare klucze bez zmian: temperatura dalej pomiar.
     assert.strictEqual(toStates({ sub: 1, text: 't=3' })[1].attributes.state_class, 'measurement');
 });
+
+test('gdzie jest mój tag: kto usłyszał ramkę, encja _heard z pozycją dla mapy HA (0.2.0-beta7)', () => {
+    const fs = require('fs'), os = require('os'), path = require('path');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-heard-'));
+    const lo = new L.Lora({ dir, deviceId: DEV, log: () => {}, send: () => {} });
+    lo.configure({ open: true });
+    const it = lo.onWs(L.encode(DEV.slice(0, 8), 21, 'v=3.9;mv=1'), 5000,
+        { rx: 'c0ffee12', rssi: -119, snr: -11.25, near: { lat: 52.23, lon: 21.01 } });
+    assert.deepStrictEqual([it.rx, it.rssi, it.snr, it.near], ['c0ffee12', -119, -11.25, { lat: 52.23, lon: 21.01 }]);
+    const h = toStates(it).find(s => s.entity_id === 'sensor.sensmos_lora_21_heard');
+    assert.equal(h.state, 'c0ffee12');
+    assert.deepStrictEqual([h.attributes.latitude, h.attributes.longitude, h.attributes.rssi], [52.23, 21.01, -119]);
+    // śmieci z sieci nie trafiają do HA
+    const bad = lo.onWs(L.encode(DEV.slice(0, 8), 22, 'v=1'), 6000, { rx: '"><b', near: { lat: 999, lon: 1 } });
+    assert.equal(bad.rx, undefined);
+    assert.ok(!toStates(bad).some(s => s.entity_id.endsWith('_heard')));
+    const nopos = lo.onWs(L.encode(DEV.slice(0, 8), 23, 'v=1'), 7000, { rx: 'c0ffee12', near: { lat: 999, lon: 1 } });
+    assert.equal(nopos.near, undefined);
+    assert.equal(toStates(nopos).find(s => s.entity_id.endsWith('_heard')).attributes.latitude, undefined);
+});

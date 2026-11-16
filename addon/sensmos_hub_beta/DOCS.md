@@ -48,6 +48,8 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
   and your ChirpStack Gateway Bridge or The Things Stack in **lorawan_forward** (`host:1700`). The network sends the
   hub only frames with those addresses and the hub forwards them like a gateway; register the EUI from the log line
   `LoRaWAN: gateway EUI …`. Decoding and the keys stay in ChirpStack. Details in the README.
+- `sensor.sensmos_lora_<sub>_heard`: which Sensmos node heard the sensor last, with its position rounded to about
+  1 km for the HA map card (where is my tag).
 - No HACS integration needed. If you also use the Sensmos integration with this hub, it shows the same
   frames as **LoRa DATA frame** sensors.
 

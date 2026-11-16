@@ -286,7 +286,7 @@ class Hub {
                 measure.run(m.jobs).then(recs => { if (recs.length) { this.send({ type: 'measure', v: 1, m: recs }); this.log(`measure: ${recs.length} records`); } });
                 return;
             case 'tun_open': return this.tunnels.onOpen(m);
-            case 'lora_frame': this.lora.onWs(m.hex); return;
+            case 'lora_frame': this.lora.onWs(m.hex, undefined, m); return;
             case 'lorawan_frame': this.lorawan.onWs(m); return;
             case 'lorawan_claimed': this.log(`LoRaWAN: the network delivers ${m.n} DevAddr to this hub`); return;
             case 'lora_frame_tx':

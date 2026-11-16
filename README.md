@@ -191,6 +191,11 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   leave your ChirpStack. Uplink only, so **ABP only** (OTAA needs a Join Accept downlink); keep the sensor on a
   channel the nodes hear, ideally 868.1 MHz DR1 (SF11, the Sensmos home channel), and turn off the frame counter
   check only if the sensor resets it.
+- **Where is my tag (0.2.0-beta7):** every LoRa sensor also gets `sensor.sensmos_lora_<sub>_heard`: the id of the
+  Sensmos node that heard its last frame, with RSSI, SNR and that node's position rounded to about 1 km as
+  `latitude`/`longitude` attributes, so the HA map card shows roughly where the sensor is. A bag, a bike or a dog
+  collar with a small LoRa board is found the way a Find My tag is, just through Sensmos nodes. Nodes that hide
+  their location send no position. The `sensmos_lora_frame` event carries `rx` and `near` too.
 - **Same API as a board:** `/info` carries a `lora` field, and `/lora/inbox`, `/node/lora_rx`,
   `/node/lora_emerg` answer like the firmware, so the app's LoRa screen and the Sensmos integration for HA
   (LoRa DATA frame sensors) work with the hub too. `/node/lorasend` sends a frame through the network
