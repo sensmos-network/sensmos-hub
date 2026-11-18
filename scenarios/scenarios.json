@@ -1031,6 +1031,74 @@
       }
     },
     {
+      "id": "hub-020-meshtastic-kom",
+      "component": "hub",
+      "min_version": "hub-0.2.0-beta6",
+      "hardware": {
+        "hub": true,
+        "ha": true,
+        "lora": true,
+        "kom": true
+      },
+      "points": 10,
+      "limit_testers": 5,
+      "ends_at": "2027-01-31T23:59:59Z",
+      "title": {
+        "en": "Communicator ↔ Meshtastic through Home Assistant",
+        "pl": "Komunikator ↔ Meshtastic przez Home Assistant",
+        "de": "Kommunikator ↔ Meshtastic über Home Assistant",
+        "pt": "Comunicador ↔ Meshtastic pelo Home Assistant"
+      },
+      "steps": {
+        "en": [
+          "You need a Meshtastic node on ESP32 with Wi-Fi at home (the gateway), a phone with the Meshtastic app and a Sensmos communicator (0.17-kom or newer) that already talks to your node at home with the blueprint komunikator_dom.",
+          "On the gateway: MQTT on, your Home Assistant broker, JSON Output Enabled, Encryption Enabled off. Add a channel named mqtt with uplink and downlink, and a private channel (e.g. index 1) with uplink and downlink. Set up the Meshtastic bridge from sensmos.com/docs/hub/ (the automation that passes msh/+/2/json/# to POST /meshtastic). Within 10 minutes HA has sensor.meshtastic_<id> and the hub log shows `Meshtastic: node !… in HA`.",
+          "Import the blueprint meshtastic_komunikator from github.com/sensmos-network/sensmos-homeassistant with the same node, sub and reply helper, your gateway id and channel 1.",
+          "On the communicator send `m hello from Sensmos`. Within a minute the Meshtastic app shows `[name] hello from Sensmos` on channel 1.",
+          "From the Meshtastic app write on channel 1. After the communicator's next `?` question (a few minutes) it shows that text.",
+          "Send the package with `--scenario hub-020-meshtastic-kom --result ok`, or `--result fail` with the step and what you saw."
+        ],
+        "pl": [
+          "Potrzebny jest nod Meshtastic na ESP32 z Wi-Fi w domu (bramka), telefon z apką Meshtastic i komunikator Sensmos (0.17-kom albo nowszy), który już rozmawia z Twoim nodem w domu przez blueprint komunikator_dom.",
+          "Na bramce: MQTT włączone, broker Twojego Home Assistanta, JSON Output Enabled, Encryption Enabled wyłączone. Dodaj kanał o nazwie mqtt z uplinkiem i downlinkiem oraz prywatny kanał (np. numer 1) z uplinkiem i downlinkiem. Ustaw most Meshtastic z sensmos.com/pl/docs/hub/ (automatyzacja, która przekazuje msh/+/2/json/# na POST /meshtastic). W ciągu 10 minut w HA jest sensor.meshtastic_<id>, a w logu Huba `Meshtastic: node !… in HA`.",
+          "Zaimportuj blueprint meshtastic_komunikator z github.com/sensmos-network/sensmos-homeassistant z tym samym nodem, sub i pomocnikiem z odpowiedzią, id bramki i kanałem 1.",
+          "Na komunikatorze wyślij `m czesc z Sensmosa`. W ciągu minuty apka Meshtastic pokazuje `[imię] czesc z Sensmosa` na kanale 1.",
+          "Z apki Meshtastic napisz na kanale 1. Po następnym pytaniu `?` komunikatora (kilka minut) widać ten tekst na komunikatorze.",
+          "Wyślij paczkę z `--scenario hub-020-meshtastic-kom --result ok` albo `--result fail` z numerem kroku i tym, co widzisz."
+        ],
+        "de": [
+          "Du brauchst eine Meshtastic-Node auf ESP32 mit WLAN zu Hause (das Gateway), ein Telefon mit der Meshtastic-App und einen Sensmos-Kommunikator (0.17-kom oder neuer), der schon mit dem Blueprint komunikator_dom mit deiner Node zu Hause spricht.",
+          "Am Gateway: MQTT an, Broker deines Home Assistant, JSON Output Enabled, Encryption Enabled aus. Leg einen Kanal namens mqtt mit Uplink und Downlink an und einen privaten Kanal (z. B. Index 1) mit Uplink und Downlink. Richte die Meshtastic-Brücke aus sensmos.com/de/docs/hub/ ein (die Automation, die msh/+/2/json/# an POST /meshtastic weitergibt). Innerhalb von 10 Minuten hat HA sensor.meshtastic_<id> und das Hub-Log zeigt `Meshtastic: node !… in HA`.",
+          "Importiere den Blueprint meshtastic_komunikator aus github.com/sensmos-network/sensmos-homeassistant mit derselben Node, demselben sub und Antwort-Helfer, deiner Gateway-ID und Kanal 1.",
+          "Sende am Kommunikator `m hallo von Sensmos`. Innerhalb einer Minute zeigt die Meshtastic-App `[Name] hallo von Sensmos` auf Kanal 1.",
+          "Schreib aus der Meshtastic-App auf Kanal 1. Nach der nächsten `?`-Frage des Kommunikators (einige Minuten) zeigt er den Text.",
+          "Sende das Paket mit `--scenario hub-020-meshtastic-kom --result ok` oder `--result fail` mit Schritt und Beobachtung."
+        ],
+        "pt": [
+          "Precisa de um node Meshtastic em ESP32 com Wi-Fi em casa (a ponte), um telefone com a app Meshtastic e um comunicador Sensmos (0.17-kom ou mais recente) que já fala com o seu node em casa pelo blueprint komunikator_dom.",
+          "Na ponte: MQTT ligado, o broker do seu Home Assistant, JSON Output Enabled, Encryption Enabled desligado. Crie um canal chamado mqtt com uplink e downlink e um canal privado (p. ex. índice 1) com uplink e downlink. Configure a ponte Meshtastic de sensmos.com/pt/docs/hub/ (a automação que passa msh/+/2/json/# para POST /meshtastic). Em 10 minutos o HA tem sensor.meshtastic_<id> e o registo do hub mostra `Meshtastic: node !… in HA`.",
+          "Importe o blueprint meshtastic_komunikator de github.com/sensmos-network/sensmos-homeassistant com o mesmo node, sub e ajudante de resposta, o id da ponte e o canal 1.",
+          "No comunicador envie `m ola do Sensmos`. Em um minuto a app Meshtastic mostra `[nome] ola do Sensmos` no canal 1.",
+          "Na app Meshtastic escreva no canal 1. Depois da próxima pergunta `?` do comunicador (alguns minutos) ele mostra esse texto.",
+          "Envie o pacote com `--scenario hub-020-meshtastic-kom --result ok`, ou `--result fail` com o passo e o que viu."
+        ]
+      },
+      "expected": {
+        "en": "A communicator message starting with m reaches the Meshtastic channel, and text from that channel reaches the communicator, with no internet on the communicator's side.",
+        "pl": "Wiadomość z komunikatora zaczynająca się od m trafia na kanał Meshtastic, a tekst z tego kanału dociera do komunikatora, bez internetu po stronie komunikatora.",
+        "de": "Eine Kommunikator-Nachricht mit m am Anfang erreicht den Meshtastic-Kanal, und Text aus diesem Kanal erreicht den Kommunikator, ohne Internet auf Seiten des Kommunikators.",
+        "pt": "Uma mensagem do comunicador que começa por m chega ao canal Meshtastic, e o texto desse canal chega ao comunicador, sem internet do lado do comunicador."
+      },
+      "auto_check": {
+        "component": "hub",
+        "version_prefix": "hub-0.2",
+        "package": true,
+        "events_any": [
+          "Meshtastic: node"
+        ]
+      }
+    },
+    {
       "id": "hub-020-esphome",
       "component": "hub",
       "min_version": "hub-0.2.0-beta7",
