@@ -981,7 +981,7 @@
         "ha": true,
         "lora": true
       },
-      "points": 5,
+      "points": 3,
       "limit_testers": 10,
       "title": {
         "en": "Hub: alarm when a LoRa sensor goes silent",
@@ -1164,7 +1164,7 @@
         "hub": true,
         "lora": true
       },
-      "points": 5,
+      "points": 3,
       "limit_testers": 5,
       "title": {
         "en": "Do Sensmos nodes hear a Shelly LoRa add-on?",
