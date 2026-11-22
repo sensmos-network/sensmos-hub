@@ -164,6 +164,7 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   [sensmos-esphome](https://github.com/sensmos-network/sensmos-esphome#recipe-meters-in-the-basement).
 - **Garden and apiary (0.2.0-beta6):** `soil` becomes a moisture sensor in %, and `kg` a weight sensor (a beehive on a load cell).
 - **Weather station (0.2.1-beta1):** `rain` becomes precipitation in mm (`total_increasing`, so a daily `utility_meter` gives the day's rain), `wind` and `gust` wind speed in m/s.
+- **Boiler room and heat pump (0.2.1-beta2):** `bar` becomes pressure in bar (the water pressure of the heating system), next to `t`/`t2` for flow and return.
 - **Second probe (0.2.0-beta6):** `t2`…`t9`, `h2`… get the same class and unit as `t` and `h` (a cold room and a freezer on one board).
 - **Water level for the neighbourly alert (0.2.0-beta6):** a shared Home Assistant sensor whose name says water
   level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`, `nível da água`) with a unit of cm, m or mm goes to

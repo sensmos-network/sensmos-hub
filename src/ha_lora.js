@@ -26,6 +26,8 @@ const KEYS = {
     // Stacja pogodowa na działce (0.2.1-beta1): deszcz narastająco od startu płytki (dzienną sumę liczy utility_meter HA),
     // wiatr i poryw w m/s.
     rain: ['precipitation', 'mm', 'total_increasing'], wind: ['wind_speed', 'm/s'], gust: ['wind_speed', 'm/s'],
+    // Kotłownia i pompa ciepła (0.2.1-beta2): ciśnienie wody w instalacji w barach.
+    bar: ['pressure', 'bar'],
 };
 const NUM = /^-?\d+(\.\d+)?$/;
 const SILENT_MAX_S = 2 * 86400;

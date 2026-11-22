@@ -272,3 +272,9 @@ test('gdzie jest mój tag: kto usłyszał ramkę, encja _heard z pozycją dla ma
     assert.equal(nopos.near, undefined);
     assert.equal(toStates(nopos).find(s => s.entity_id.endsWith('_heard')).attributes.latitude, undefined);
 });
+
+test('toStates: bar = cisnienie w instalacji w barach (kotlownia)', () => {
+    const by = Object.fromEntries(toStates({ sub: 23, text: 'bar=1.6;t=55.2;t2=41.0;fault=0' }).map(x => [x.entity_id, x.attributes]));
+    assert.deepStrictEqual([by['sensor.sensmos_lora_23_bar'].device_class, by['sensor.sensmos_lora_23_bar'].unit_of_measurement], ['pressure', 'bar']);
+    assert.strictEqual(by['sensor.sensmos_lora_23_t2'].device_class, 'temperature');
+});

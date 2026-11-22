@@ -1154,6 +1154,61 @@
       }
     },
     {
+      "id": "hub-021-kotlownia",
+      "component": "hub",
+      "min_version": "hub-0.2.1-beta2",
+      "hardware": {
+        "hub": true,
+        "ha": true,
+        "lora": true
+      },
+      "points": 3,
+      "limit_testers": 10,
+      "ends_at": "2027-01-31T23:59:59Z",
+      "title": {
+        "en": "Hub: boiler room or heat pump over LoRa",
+        "pl": "Hub: kotłownia albo pompa ciepła przez LoRa",
+        "de": "Hub: Heizraum oder Wärmepumpe über LoRa",
+        "pt": "Hub: sala da caldeira ou bomba de calor por LoRa"
+      },
+      "steps": {
+        "en": [
+          "Install the beta add-on Sensmos Hub 0.2.1-beta2. Flash a Heltec V3 with examples/lora-kotlownia.yaml from github.com/sensmos-network/sensmos-esphome. The pressure transducer is optional; for the test two DS18B20 probes and a wire on the fault input are enough.",
+          "Within 10 minutes Home Assistant has sensor.sensmos_lora_23_t and _t2 in °C (and _bar in bar with a transducer). Short the fault input to GND: within a minute sensor.sensmos_lora_23_fault shows 1, and 0 again when you open it.",
+          "Send the package with `--scenario hub-021-kotlownia --result ok`, or `--result fail` with what you saw."
+        ],
+        "pl": [
+          "Zainstaluj dodatek beta Sensmos Hub 0.2.1-beta2. Wgraj na Heltec V3 examples/lora-kotlownia.yaml z github.com/sensmos-network/sensmos-esphome. Czujnik ciśnienia jest opcjonalny; do testu wystarczą dwa DS18B20 i kabelek na wejściu awarii.",
+          "W ciągu 10 minut w Home Assistant jest sensor.sensmos_lora_23_t i _t2 w °C (z czujnikiem ciśnienia także _bar w barach). Zewrzyj wejście awarii do GND: w ciągu minuty sensor.sensmos_lora_23_fault pokazuje 1, a po rozwarciu znów 0.",
+          "Wyślij paczkę z `--scenario hub-021-kotlownia --result ok` albo `--result fail` z opisem, co widzisz."
+        ],
+        "de": [
+          "Installiere das Beta-Add-on Sensmos Hub 0.2.1-beta2. Flashe ein Heltec V3 mit examples/lora-kotlownia.yaml aus github.com/sensmos-network/sensmos-esphome. Der Drucksensor ist optional; für den Test reichen zwei DS18B20 und ein Draht am Störungseingang.",
+          "Innerhalb von 10 Minuten hat Home Assistant sensor.sensmos_lora_23_t und _t2 in °C (mit Drucksensor auch _bar in bar). Verbinde den Störungseingang mit GND: innerhalb einer Minute zeigt sensor.sensmos_lora_23_fault 1, nach dem Öffnen wieder 0.",
+          "Sende das Paket mit `--scenario hub-021-kotlownia --result ok` oder `--result fail` mit deiner Beobachtung."
+        ],
+        "pt": [
+          "Instale o add-on beta Sensmos Hub 0.2.1-beta2. Grave num Heltec V3 o examples/lora-kotlownia.yaml de github.com/sensmos-network/sensmos-esphome. O sensor de pressão é opcional; para o teste bastam duas sondas DS18B20 e um fio na entrada de avaria.",
+          "Em 10 minutos o Home Assistant tem sensor.sensmos_lora_23_t e _t2 em °C (com sensor de pressão também _bar em bar). Ligue a entrada de avaria ao GND: num minuto sensor.sensmos_lora_23_fault mostra 1, e 0 outra vez ao abrir.",
+          "Envie o pacote com `--scenario hub-021-kotlownia --result ok`, ou `--result fail` com o que viu."
+        ]
+      },
+      "expected": {
+        "en": "Flow and return temperatures arrive in °C, pressure in bar, and the fault contact is reported within a minute.",
+        "pl": "Temperatury zasilania i powrotu przychodzą w °C, ciśnienie w barach, a styk awarii dociera w ciągu minuty.",
+        "de": "Vor- und Rücklauftemperatur kommen in °C an, der Druck in bar, und der Störkontakt wird innerhalb einer Minute gemeldet.",
+        "pt": "As temperaturas de ida e retorno chegam em °C, a pressão em bar, e o contacto de avaria é reportado num minuto."
+      },
+      "auto_check": {
+        "component": "hub",
+        "version_prefix": "hub-0.2",
+        "package": true,
+        "events_any": [
+          "LoRa: frame sub 23"
+        ]
+      }
+    },
+    {
       "id": "hub-020-esphome",
       "component": "hub",
       "min_version": "hub-0.2.0-beta7",

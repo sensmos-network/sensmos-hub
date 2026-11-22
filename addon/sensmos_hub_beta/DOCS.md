@@ -40,6 +40,7 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
 - Meter keys `kwh`, `m3` (or `water`) and `gas` are counters (`total_increasing`) that the Energy dashboard accepts;
   `w` and `kw` are power.
 - Weather keys (0.2.1-beta1): `rain` is precipitation in mm (`total_increasing`), `wind` and `gust` are wind speed in m/s.
+- Boiler room keys (0.2.1-beta2): `bar` is the heating system pressure in bar; `t` and `t2` are flow and return temperatures.
 - A shared sensor named like a water level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`) in cm, m or mm is
   sent as `water_level` (cm) for the neighbourly water alert.
 - A shared temperature or humidity sensor named like it is outside (`outdoor`, `balcony`, `balkon`, `garden`, `ogród`,
