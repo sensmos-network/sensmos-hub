@@ -1,0 +1,28 @@
+name: Sensmos Pro
+version: "0.3.0-beta1"
+slug: sensmos_pro
+description: "Remote care of this Home Assistant by your installer: alerts when Home Assistant, an integration, Modbus or the internet goes down, charts, logs and signed remote actions. No wallet, no crypto."
+url: https://github.com/sensmos-network/sensmos-hub
+arch:
+  - aarch64
+  - amd64
+  - armv7
+startup: services
+boot: auto
+host_network: true
+# odczyt stanów, konfiguracji i integracji HA; sterowanie tylko poleceniami podpisanymi kluczem instalatora (src/pro.js)
+homeassistant_api: true
+# dysk, wersje Core/OS/Supervisora i data ostatniej kopii (GET /host/info, /core/info, /os/info, /supervisor/info, /backups)
+hassio_api: true
+hassio_role: manager
+init: false
+options:
+  installer_code: ""
+  site_name: ""
+  lan_checks: ""
+  allow_control: true
+schema:
+  installer_code: match(^[Ss][Pp]-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$)
+  site_name: str?
+  lan_checks: str?
+  allow_control: bool

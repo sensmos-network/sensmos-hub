@@ -1,0 +1,20 @@
+configuration:
+  installer_code:
+    name: Kod instalatora
+    description: >-
+      Kod od Twojego instalatora, np. SP-ABCD-2345 (panel Sensmos Pro → Dodaj klienta).
+      Ten Home Assistant pojawi się wtedy w jego panelu.
+  site_name:
+    name: Nazwa obiektu (opcjonalnie)
+    description: Jak ta instalacja nazywa się w panelu instalatora, np. „Dom Kowalskich”. Można ją też zmienić w panelu.
+  lan_checks:
+    name: Urządzenia w sieci lokalnej do pilnowania (opcjonalnie)
+    description: >-
+      Po przecinku, nazwa=adres albo nazwa=adres:port, np. nas=192.168.1.5:445, drukarka=192.168.1.20:9100,
+      falownik=192.168.1.30:502. Bez portu urządzenie jest pingowane. Brama domyślna jest sprawdzana zawsze.
+  allow_control:
+    name: Zezwól na zdalne działania
+    description: >-
+      Instalator może z panelu zrestartować Home Assistanta, przeładować integrację, zrobić kopię, zainstalować
+      aktualizację, wywołać usługę albo dodać automatyzację. Każde działanie jest podpisane kluczem konta
+      instalatora i zapisane w panelu. Wyłącz, żeby nadzór był tylko do odczytu.

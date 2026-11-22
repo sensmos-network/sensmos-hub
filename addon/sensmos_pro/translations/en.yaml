@@ -1,0 +1,20 @@
+configuration:
+  installer_code:
+    name: Installer code
+    description: >-
+      The code your installer gave you, like SP-ABCD-2345 (Sensmos Pro panel → Add client).
+      This Home Assistant then shows up in their panel.
+  site_name:
+    name: Site name (optional)
+    description: How this installation is named in the installer's panel, e.g. "Kowalski house". Can also be changed in the panel.
+  lan_checks:
+    name: Devices to watch in the local network (optional)
+    description: >-
+      Comma separated, name=address or name=address:port, e.g. nas=192.168.1.5:445, printer=192.168.1.20:9100,
+      inverter=192.168.1.30:502. Without a port the device is pinged. The default gateway is always checked.
+  allow_control:
+    name: Allow remote actions
+    description: >-
+      Lets your installer restart Home Assistant, reload an integration, start a backup, install an update,
+      run a service or add an automation from the panel. Every action is signed by the installer's account key
+      and logged in the panel. Turn off to keep the supervision read only.
