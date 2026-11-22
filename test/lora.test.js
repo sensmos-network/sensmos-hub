@@ -229,6 +229,13 @@ test('toStates: soil = wilgotność gleby w %, kg = waga (szklarnia, pasieka)', 
     assert.deepStrictEqual([by['sensor.sensmos_lora_10_kg'].device_class, by['sensor.sensmos_lora_10_kg'].unit_of_measurement, by['sensor.sensmos_lora_10_kg'].state_class], ['weight', 'kg', 'measurement']);
 });
 
+test('toStates: rain = opad narastająco w mm, wind i gust = wiatr w m/s (stacja pogodowa)', () => {
+    const by = Object.fromEntries(toStates({ sub: 19, text: 'rain=12.6;wind=3.4;gust=9.1;t=7.5' }).map(x => [x.entity_id, x.attributes]));
+    assert.deepStrictEqual([by['sensor.sensmos_lora_19_rain'].device_class, by['sensor.sensmos_lora_19_rain'].unit_of_measurement, by['sensor.sensmos_lora_19_rain'].state_class], ['precipitation', 'mm', 'total_increasing']);
+    assert.deepStrictEqual([by['sensor.sensmos_lora_19_wind'].device_class, by['sensor.sensmos_lora_19_wind'].unit_of_measurement], ['wind_speed', 'm/s']);
+    assert.deepStrictEqual([by['sensor.sensmos_lora_19_gust'].device_class, by['sensor.sensmos_lora_19_gust'].state_class], ['wind_speed', 'measurement']);
+});
+
 test('toStates: t2 i h2 (druga sonda) mają klasę jak t i h', () => {
     const by = Object.fromEntries(toStates({ sub: 12, text: 't=3.2;t2=-19.5;door=0' }).map(x => [x.entity_id, x.attributes]));
     assert.deepStrictEqual([by['sensor.sensmos_lora_12_t2'].device_class, by['sensor.sensmos_lora_12_t2'].unit_of_measurement], ['temperature', '°C']);

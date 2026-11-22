@@ -23,6 +23,9 @@ const KEYS = {
     kwh: ['energy', 'kWh', 'total_increasing'],
     m3: ['water', 'm³', 'total_increasing'], water: ['water', 'm³', 'total_increasing'],
     gas: ['gas', 'm³', 'total_increasing'],
+    // Stacja pogodowa na działce (0.2.1-beta1): deszcz narastająco od startu płytki (dzienną sumę liczy utility_meter HA),
+    // wiatr i poryw w m/s.
+    rain: ['precipitation', 'mm', 'total_increasing'], wind: ['wind_speed', 'm/s'], gust: ['wind_speed', 'm/s'],
 };
 const NUM = /^-?\d+(\.\d+)?$/;
 const SILENT_MAX_S = 2 * 86400;
