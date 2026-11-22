@@ -37,3 +37,9 @@ configuration:
     description: >-
       Opcjonalnie. Id Twoich albo rodzinnych nodów Meshtastic po przecinku, np. !7efeee00. Tylko ich pozycje
       trafiają do sensor.meshtastic_<id>_where na mapę HA; pozycji innych nodów Hub nie zapisuje.
+  outdoor_sensors:
+    name: Czujniki na zewnątrz
+    description: >-
+      Opcjonalnie. Udostępnione czujniki temperatury i wilgotności, które są na zewnątrz, po przecinku, np. sensor.sonda_2.
+      Idą do sieci jako odczyty zewnętrzne. Nazwy typu balkon, ogród, zewnątrz Hub rozpoznaje sam; -sensor.x oznacza
+      czujnik wewnątrz, none wyłącza zgadywanie po nazwie.

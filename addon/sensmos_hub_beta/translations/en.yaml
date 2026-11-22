@@ -37,3 +37,9 @@ configuration:
     description: >-
       Optional. Ids of your own or your family's Meshtastic nodes, comma separated, e.g. !7efeee00. Only their
       positions become sensor.meshtastic_<id>_where for the HA map; positions of other nodes are never kept.
+  outdoor_sensors:
+    name: Outdoor sensors
+    description: >-
+      Optional. Shared temperature and humidity sensors that are outside, comma separated, e.g. sensor.probe_2. They go
+      to the network as outdoor readings. Names like balcony, garden or outdoor are recognised without this;
+      -sensor.x marks one as indoors, none turns the name guess off.

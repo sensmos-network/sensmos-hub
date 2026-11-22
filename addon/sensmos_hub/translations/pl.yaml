@@ -1,9 +1,10 @@
 configuration:
   owner:
-    name: Adres portfela
+    name: Adres portfela (opcjonalnie)
     description: >-
-      Adres portfela z apki Sensmos (ekran Portfel, zaczyna się od 0x). Nod rejestruje się na ten
-      portfel i tam trafia przydział GALU.
+      Zostaw puste i dodaj Huba z apki Sensmos (Nody → Dodaj → Szukaj w sieci, PIN z powiadomienia
+      w Home Assistancie): apka sama przypisze go do Twojego portfela. Albo wklej adres portfela
+      (ekran Portfel, zaczyna się od 0x). Nod rejestruje się na ten portfel i tam trafia przydział GALU.
   pin:
     name: PIN
     description: >-
@@ -12,3 +13,33 @@ configuration:
   port:
     name: Port w sieci lokalnej
     description: Port, na którym apka łączy się z nodem. Zostaw 80, chyba że zajmuje go inny dodatek.
+  lora_key:
+    name: Fraza klucza LoRa
+    description: >-
+      Ta sama fraza, którą ustawiasz w czujnikach LoRa. Hub odszyfrowuje nią ich ramki i pokazuje je
+      jako encje sensor.sensmos_lora_*. Opcjonalnie: można ją też ustawić w apce (karta Huba → LoRa).
+  lorawan_forward:
+    name: Przekazywanie LoRaWAN (host:port)
+    description: >-
+      Opcjonalnie. Twój ChirpStack Gateway Bridge albo The Things Stack, np. 192.168.1.10:1700. Hub przekazuje tam ramki LoRaWAN z adresami poniżej, jak brama (tylko uplink).
+  lorawan_devaddr:
+    name: DevAddr LoRaWAN
+    description: >-
+      Opcjonalnie. Adresy Twoich czujników ABP po przecinku, np. 26011A2B. Do Huba trafiają tylko ramki z tymi adresami.
+  esphome_lora:
+    name: Zwykłe płytki ESPHome przez LoRa
+    description: >-
+      Opcjonalnie. Płytki, które nadają wbudowanym w ESPHome packet_transport przez sx126x na kanale domowym Sensmos,
+      jako nazwa=sub:hasło, rozdzielone ;, np. czujnik-dzialka=20:moje-haslo. Nazwa = esphome name płytki,
+      hasło = napis z encryption w packet_transport. Odczyty pojawiają się jako sensor.sensmos_lora_<sub>_<id>.
+  meshtastic_track:
+    name: Nody Meshtastic na mapie
+    description: >-
+      Opcjonalnie. Id Twoich albo rodzinnych nodów Meshtastic po przecinku, np. !7efeee00. Tylko ich pozycje
+      trafiają do sensor.meshtastic_<id>_where na mapę HA; pozycji innych nodów Hub nie zapisuje.
+  outdoor_sensors:
+    name: Czujniki na zewnątrz
+    description: >-
+      Opcjonalnie. Udostępnione czujniki temperatury i wilgotności, które są na zewnątrz, po przecinku, np. sensor.sonda_2.
+      Idą do sieci jako odczyty zewnętrzne. Nazwy typu balkon, ogród, zewnątrz Hub rozpoznaje sam; -sensor.x oznacza
+      czujnik wewnątrz, none wyłącza zgadywanie po nazwie.

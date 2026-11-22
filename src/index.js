@@ -13,6 +13,7 @@ const cfg = {
     loraHa: !/^(0|false|no|off)$/i.test(process.env.HUB_LORA_HA || ''),
     meshtastic: !/^(0|false|no|off)$/i.test(process.env.HUB_MESHTASTIC || ''),
     meshtasticTrack: process.env.HUB_MESHTASTIC_TRACK || '',       // id nodów Meshtastic, których pozycja idzie na mapę HA
+    outdoor: process.env.HUB_OUTDOOR || '',                  // czujniki HA na zewnątrz (temp_out/humidity_out), po przecinku
     lorawanForward: process.env.HUB_LORAWAN_FORWARD || '',   // host:port ChirpStacka albo TTN (Semtech UDP)
     lorawanDevaddr: process.env.HUB_LORAWAN_DEVADDR || '',   // DevAddr czujników ABP, po przecinku
     esphomeLora: process.env.HUB_ESPHOME_LORA || '',         // zwykłe ESPHome przez sieć: "nazwa=sub:hasło; …"

@@ -249,7 +249,7 @@ class Hub {
 
     sendSensors() {
         if (!this.ha || this.ha.error) return 0;   // HA niedostępny: nie udajemy świeżych odczytów
-        const entities = ha.toEntities(this.ha.sensors, id => this.shared?.has(id));
+        const entities = ha.toEntities(this.ha.sensors, id => this.shared?.has(id), this.outdoor ||= ha.outdoorRule(this.cfg.outdoor));
         this.lastEntities = entities; this.lastAt = Math.floor(Date.now() / 1000);
         if (!entities.length) {
             if (this.lastSent && this.chan) { this.send({ type: 'batch', device_id: this.id.id, firmware: FIRMWARE, entities: [] }); this.log('sensors to network: 0 (withdrawn)'); }

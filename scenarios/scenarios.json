@@ -11,10 +11,10 @@
       "points": 1,
       "limit_testers": 20,
       "title": {
-        "en": "Install Sensmos Hub 0.1 with Docker",
-        "pl": "Zainstaluj Sensmos Hub 0.1 w Dockerze",
-        "de": "Sensmos Hub 0.1 mit Docker installieren",
-        "pt": "Instalar o Sensmos Hub 0.1 com Docker"
+        "en": "Install Sensmos Hub with Docker",
+        "pl": "Zainstaluj Sensmos Hub w Dockerze",
+        "de": "Sensmos Hub mit Docker installieren",
+        "pt": "Instalar o Sensmos Hub com Docker"
       },
       "steps": {
         "en": [
@@ -51,7 +51,7 @@
       "auto_check": {
         "component": "hub",
         "package": true,
-        "version_prefix": "hub-0.1",
+        "version_prefix": "hub-0.",
         "events_any": [
           "połączony z",
           "connected to"

@@ -103,7 +103,7 @@ const NATIVE_SENSOR = {
 const NATIVE_BINARY = { door: 'door', garage_door: 'door', window: 'window', motion: 'motion', occupancy: 'presence', presence: 'presence' };
 const NATIVE = { ...NATIVE_SENSOR, ...NATIVE_BINARY };
 // Jednostka natywnej encji w sieci; inne jednostki przeliczamy albo (gdy się nie da) wysyłamy jako own.*.
-const UNIT = { water_level: 'cm', temp_in: '°C', humidity_in: '%', pressure: 'hPa', co2: 'ppm', pm25: 'µg/m³', pm10: 'µg/m³', noise_db: 'dB', load_power: 'W', grid_v: 'V', batt_soc: '%' };
+const UNIT = { water_level: 'cm', temp_in: '°C', humidity_in: '%', temp_out: '°C', humidity_out: '%', pressure: 'hPa', co2: 'ppm', pm25: 'µg/m³', pm10: 'µg/m³', noise_db: 'dB', load_power: 'W', grid_v: 'V', batt_soc: '%' };
 const CONVERT = {
     '°F>°C': v => (v - 32) * 5 / 9, 'K>°C': v => v - 273.15, 'kPa>hPa': v => v * 10, 'Pa>hPa': v => v / 100, 'mbar>hPa': v => v,
     'inHg>hPa': v => v * 33.8639, 'psi>hPa': v => v * 68.9476, 'kW>W': v => v * 1000, 'mV>V': v => v / 1000, 'dBA>dB': v => v,
@@ -112,6 +112,22 @@ const CONVERT = {
 // Poziom wody (alert sąsiedzki, roadmapa q3-automatyka-sasiedzka): HA nie ma na to device_class, więc poznajemy
 // go po nazwie czujnika w kilku językach i jednostce długości; trafia jako pub.water_level w cm.
 const WATER_LEVEL = /water[_ ]?level|poziom[_ ]?wody|wasserstand|pegel|nivel[_ ]?(da[_ ]?)?agua|nível[_ ]?(da[_ ]?)?água/i;
+// Czujnik na zewnątrz (zgłoszenie testera 19.11: balkon szedł jako temp_in): temperatura i wilgotność idą wtedy jako
+// temp_out / humidity_out (kategoria ENV, jak w ESPHome). Po nazwie w kilku językach albo z listy HUB_OUTDOOR
+// (opcja outdoor_sensors: entity_id po przecinku; "-sensor.x" = na pewno wewnątrz; "none" = bez zgadywania po nazwie).
+const OUTDOOR = /outdoor|outside|exterior|balcon|balkon|terrace|terrass|terraz|terraç|garden|garten|ogrod|ogród|jardin|jardim|jardín|zewn|aussen|außen|draussen|draußen|dış|disari|dışarı|bahce|bahçe|patio|yard|veranda|weather|pogod|wetter/i;
+const OUTDOOR_NATIVE = { temp_in: 'temp_out', humidity_in: 'humidity_out' };
+function outdoorRule(list) {
+    const items = String(list || '').split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+    const yes = new Set(items.filter(x => !x.startsWith('-') && x !== 'none'));
+    const no = new Set(items.filter(x => x.startsWith('-')).map(x => x.slice(1)));
+    const guess = !items.includes('none');
+    return s => {
+        if (yes.has(s.entity_id)) return true;
+        if (no.has(s.entity_id)) return false;
+        return guess && OUTDOOR.test(`${s.entity_id.split('.')[1] || ''} ${s.name || ''}`);
+    };
+}
 function nativeValue(nat, s, value) {
     if (typeof value !== 'number') return null;
     const want = UNIT[nat];
@@ -121,7 +137,7 @@ function nativeValue(nat, s, value) {
     const f = CONVERT[have + '>' + want];
     return f ? { value: Math.round(f(value) * 100) / 100, unit: want } : null;
 }
-function toEntities(sensors, isShared) {
+function toEntities(sensors, isShared, isOutdoor = outdoorRule('')) {
     const used = new Set(), out = [];
     for (const s of sensors) {
         if (!isShared(s.entity_id)) continue;
@@ -129,7 +145,8 @@ function toEntities(sensors, isShared) {
         const ts = s.updated ? Math.floor(Date.parse(s.updated) / 1000) || 0 : 0;
         const [domain, obj] = s.entity_id.split('.');
         const water = domain === 'sensor' && ['cm', 'm', 'mm'].includes(s.unit || '') && WATER_LEVEL.test(`${obj} ${s.name || ''}`);
-        const nat = water ? 'water_level' : (domain === 'binary_sensor' ? NATIVE_BINARY : NATIVE_SENSOR)[s.device_class];
+        let nat = water ? 'water_level' : (domain === 'binary_sensor' ? NATIVE_BINARY : NATIVE_SENSOR)[s.device_class];
+        if (OUTDOOR_NATIVE[nat] && isOutdoor(s)) nat = OUTDOOR_NATIVE[nat];
         const nv = nat && !used.has(nat) ? nativeValue(nat, s, value) : null;
         if (nv) { used.add(nat); out.push({ entity_id: 'pub.' + nat, value: nv.value, unit: nv.unit, last_updated: ts }); continue; }
         // own.ha_s_<obj> / own.ha_b_<obj>: 48 znaków jak w BE (soft_data), domena w nazwie = bez kolizji
@@ -150,4 +167,4 @@ async function callService(cfg, service, data, { timeoutMs = 8000 } = {}) {
 const notify = (cfg, { notification_id, title, message }) => callService(cfg, 'create', { notification_id, title, message });
 const dismiss = (cfg, notification_id) => callService(cfg, 'dismiss', { notification_id });
 
-module.exports = { config, toSensor, fetchSensors, HaSensors, Shared, toEntities, NATIVE, notify, dismiss };
+module.exports = { config, toSensor, fetchSensors, HaSensors, Shared, toEntities, outdoorRule, NATIVE, notify, dismiss };

@@ -41,6 +41,9 @@ frames stay encrypted on the way: only the hub, with your key phrase, can read t
   `w` and `kw` are power.
 - A shared sensor named like a water level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`) in cm, m or mm is
   sent as `water_level` (cm) for the neighbourly water alert.
+- A shared temperature or humidity sensor named like it is outside (`outdoor`, `balcony`, `balkon`, `garden`, `ogród`,
+  `außen`, `exterior`, `jardim`, `dış`…) is sent as `temp_out` / `humidity_out`. **outdoor_sensors** lists more
+  (`sensor.probe_2, …`), `-sensor.x` marks one as indoors, `none` turns the name guess off.
 - Meshtastic positions on the HA map: list your own or family nodes in **meshtastic_track** (`!7efeee00, …`);
   only they get `sensor.meshtastic_<id>_where` with latitude/longitude. Other nodes' positions are never kept.
 - Meshtastic bridge: an automation with an MQTT trigger on `msh/+/2/json/#` that calls a `rest_command` posting the

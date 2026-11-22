@@ -151,7 +151,7 @@ test('mapowanie per domena i jednostki: binarna bateria nie jest poziomem, °F �
     ], all);
     const by = Object.fromEntries(out.map(e => [e.entity_id, e]));
     assert.ok(by['own.ha_b_bateria'], 'binary battery → own');
-    assert.deepStrictEqual([by['pub.temp_in'].value, by['pub.temp_in'].unit], [20, '°C']);
+    assert.deepStrictEqual([by['pub.temp_out'].value, by['pub.temp_out'].unit], [20, '°C'], 'ogród = na zewnątrz');
     assert.deepStrictEqual([by['pub.load_power'].value, by['pub.load_power'].unit], [1500, 'W']);
     assert.ok(by['own.ha_s_cisn'] && !by['pub.pressure'], 'nieprzeliczalna jednostka nie trafia do natywnej');
     assert.ok(by['own.ha_s_door'] && by['own.ha_b_door'], 'sensor.x i binary_sensor.x bez kolizji');
@@ -167,4 +167,24 @@ test('poziom wody po nazwie i jednostce długości → pub.water_level w cm; bez
     assert.deepStrictEqual([by['pub.water_level'].value, by['pub.water_level'].unit], [132, 'cm']);
     assert.ok(by['own.ha_s_zbiornik'], 'drugi poziom wody nie nadpisuje pierwszego');
     assert.ok(by['own.ha_s_water_level_pct'], 'procenty to nie poziom w cm');
+});
+
+test('czujnik na zewnątrz (balkon) → pub.temp_out / humidity_out; lista HUB_OUTDOOR i wyjątki', () => {
+    const all = () => true;
+    const sensors = [
+        { entity_id: 'sensor.balkon_sicaklik', value: 7.5, unit: '°C', device_class: 'temperature' },
+        { entity_id: 'sensor.salon', name: 'Salon', value: 21, unit: '°C', device_class: 'temperature' },
+        { entity_id: 'sensor.th_2', name: 'Außen Feuchte', value: 80, unit: '%', device_class: 'humidity' },
+        { entity_id: 'sensor.sonda', value: 3, unit: '°C', device_class: 'temperature' },
+    ];
+    let by = Object.fromEntries(ha.toEntities(sensors, all).map(e => [e.entity_id, e]));
+    assert.strictEqual(by['pub.temp_out'].value, 7.5, 'balkon po nazwie');
+    assert.strictEqual(by['pub.temp_in'].value, 21);
+    assert.strictEqual(by['pub.humidity_out'].value, 80, 'Außen po nazwie przyjaznej');
+    assert.ok(by['own.ha_s_sonda'], 'druga temperatura wewnątrz nie nadpisuje pierwszej');
+    by = Object.fromEntries(ha.toEntities(sensors, all, ha.outdoorRule('sensor.sonda, -sensor.balkon_sicaklik')).map(e => [e.entity_id, e]));
+    assert.strictEqual(by['pub.temp_out'].value, 3, 'z listy');
+    assert.strictEqual(by['pub.temp_in'].value, 7.5, 'wyjątek "-" = wewnątrz');
+    by = Object.fromEntries(ha.toEntities(sensors, all, ha.outdoorRule('none')).map(e => [e.entity_id, e]));
+    assert.ok(!by['pub.temp_out'] && !by['pub.humidity_out'], 'none = bez zgadywania');
 });

@@ -1,9 +1,10 @@
 configuration:
   owner:
-    name: Wallet address
+    name: Wallet address (optional)
     description: >-
-      Your wallet address from the Sensmos app (Wallet screen, starts with 0x). The node is registered
-      to this wallet and its GALU allocations go there.
+      Leave empty and add the hub from the Sensmos app (Nodes → Add → Search the network, PIN from the
+      Home Assistant notification): the app assigns it to your wallet. Or paste your wallet address
+      (Wallet screen, starts with 0x). The node is registered to this wallet and its GALU allocations go there.
   pin:
     name: PIN
     description: >-
@@ -12,3 +13,33 @@ configuration:
   port:
     name: LAN port
     description: Port the app talks to on your network. Keep 80 unless another add-on uses it.
+  lora_key:
+    name: LoRa key phrase
+    description: >-
+      The same phrase you set in your LoRa sensors. The hub decrypts their frames with it and shows them
+      as sensor.sensmos_lora_* entities. Optional: you can also set it in the app (hub card → LoRa).
+  lorawan_forward:
+    name: LoRaWAN forward (host:port)
+    description: >-
+      Optional. Your ChirpStack Gateway Bridge or The Things Stack, e.g. 192.168.1.10:1700. The hub forwards to it the LoRaWAN frames with the addresses below, like a gateway (uplink only).
+  lorawan_devaddr:
+    name: LoRaWAN DevAddr
+    description: >-
+      Optional. Addresses of your ABP sensors, comma separated, e.g. 26011A2B. Only frames with these addresses reach the hub.
+  esphome_lora:
+    name: Plain ESPHome boards over LoRa
+    description: >-
+      Optional. Boards that send with ESPHome's own packet_transport over sx126x on the Sensmos home channel, as
+      name=sub:encryption, separated by ;, e.g. allotment-sensor=20:my-secret. Name = esphome name of the board,
+      encryption = the packet_transport encryption string. Readings show up as sensor.sensmos_lora_<sub>_<id>.
+  meshtastic_track:
+    name: Meshtastic nodes on the map
+    description: >-
+      Optional. Ids of your own or your family's Meshtastic nodes, comma separated, e.g. !7efeee00. Only their
+      positions become sensor.meshtastic_<id>_where for the HA map; positions of other nodes are never kept.
+  outdoor_sensors:
+    name: Outdoor sensors
+    description: >-
+      Optional. Shared temperature and humidity sensors that are outside, comma separated, e.g. sensor.probe_2. They go
+      to the network as outdoor readings. Names like balcony, garden or outdoor are recognised without this;
+      -sensor.x marks one as indoors, none turns the name guess off.

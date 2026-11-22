@@ -5,7 +5,7 @@ to your wallet like a normal node, measures your home link and opens the encrypt
 Sensmos app to devices on your LAN, for example the Home Assistant panel, without port forwarding,
 VPN or a public IP.
 
-**Stable 0.1.1, test builds 0.2.0-beta (see below).** It speaks the same protocol as the firmware (`kontrakt/protokol/`), so the
+**Stable 0.2.0 (Home Assistant add-on and Docker); test builds come as 0.2.x-beta first.** It speaks the same protocol as the firmware (`kontrakt/protokol/`), so the
 backend and the app treat it as a node. It has no radio, so it does not relay LoRa frames; it is
 reported to the backend as kind `hub`. It can still receive your LoRa sensors through the network
 (from 0.2.0-beta2, see below).
@@ -168,6 +168,11 @@ SHA-256 of the phrase) and sends back a receipt with metadata only. The backend 
   level (`water_level`, `poziom_wody`, `Wasserstand`, `Pegel`, `nível da água`) with a unit of cm, m or mm goes to
   the network as `water_level` in cm. Neighbours who turned on the water alert in the app get a notification when it
   rises fast near them. It only says the station's pseudonym and distance, never who you are.
+- **Outdoor sensors (0.2.0):** a shared temperature or humidity sensor whose name says it is outside (`outdoor`,
+  `balcony`/`balkon`, `garden`/`ogród`/`Garten`, `zewn…`, `außen`, `exterior`, `jardim`, `dış`, `bahçe`, `weather`…)
+  goes to the network as `temp_out` / `humidity_out` instead of `temp_in` / `humidity_in`. Set `HUB_OUTDOOR`
+  (add-on: `outdoor_sensors`) to list entity ids that are outside (`sensor.probe_2`), `-sensor.x` for one that is
+  inside despite its name, or `none` to turn the name guess off.
 - **Meshtastic bridge (0.2.0-beta6):** Meshtastic messages and sensors in Home Assistant, without the hub transmitting
   anything. Turn on MQTT with **JSON enabled** on a Meshtastic node with Wi-Fi and point it at the Home Assistant
   broker, then add the automation below. Every text message becomes `sensor.meshtastic_<id>` and the event
