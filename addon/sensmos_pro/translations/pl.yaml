@@ -18,3 +18,9 @@ configuration:
       Instalator może z panelu zrestartować Home Assistanta, przeładować integrację, zrobić kopię, zainstalować
       aktualizację, wywołać usługę albo dodać automatyzację. Każde działanie jest podpisane kluczem konta
       instalatora i zapisane w panelu. Wyłącz, żeby nadzór był tylko do odczytu.
+  allow_remote_ui:
+    name: Zezwól na zdalny podgląd Home Assistanta
+    description: >-
+      Instalator może otworzyć pełny interfejs tego Home Assistanta w swojej przeglądarce, logując się swoim
+      kontem HA. Połączenie otwiera się tylko na jego podpisane polecenie i zamyka po 30 minutach bezczynności.
+      Działa tylko razem z „Zezwól na zdalne działania”.

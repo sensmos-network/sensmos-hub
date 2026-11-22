@@ -7,5 +7,6 @@ export HUB_PRO_CODE="$(opt installer_code)"
 export HUB_PRO_NAME="$(opt site_name)"
 export HUB_PRO_LAN="$(opt lan_checks)"
 export HUB_PRO_CONTROL="$(opt allow_control)"
+export HUB_PRO_UI="$(opt allow_remote_ui)"
 export HUB_DATA=/data
 exec node /app/src/index.js

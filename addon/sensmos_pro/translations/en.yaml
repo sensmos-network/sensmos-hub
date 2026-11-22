@@ -18,3 +18,9 @@ configuration:
       Lets your installer restart Home Assistant, reload an integration, start a backup, install an update,
       run a service or add an automation from the panel. Every action is signed by the installer's account key
       and logged in the panel. Turn off to keep the supervision read only.
+  allow_remote_ui:
+    name: Allow remote Home Assistant view
+    description: >-
+      Your installer can open the full interface of this Home Assistant in their browser and sign in with their
+      own HA account. The connection opens only on their signed command and closes after 30 minutes idle.
+      Works only together with "Allow remote actions".

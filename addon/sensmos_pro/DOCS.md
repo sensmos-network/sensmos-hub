@@ -11,11 +11,18 @@ before you notice anything.
   add an automation from a template, read the log. Each action is signed by the installer's account key, which the
   add-on pins on first connection, so not even the Sensmos server can send one. Turn off **Allow remote actions**
   to make the supervision read only.
+- **Remote Home Assistant view.** On the installer's signed command the add-on opens a tunnel to the panel
+  server, so the installer sees the full Home Assistant interface in a browser at a separate Sensmos address
+  and signs in with their own Home Assistant account (your password is never needed). The tunnel closes after
+  30 minutes idle, at the latest after 8 hours. Traffic is encrypted between the browser and the server
+  and between the server and this add-on, and the server relays it. Turn off **Allow remote Home Assistant view**
+  if you do not want this. If you use the *Trusted networks* sign-in with 127.0.0.1, remove that address, because
+  the tunnel reaches Home Assistant from this machine.
 - **No wallet, no tokens, no crypto.** This is not a Sensmos network node and earns nothing.
 - **What leaves your home:** the Home Assistant version and state, the number of entities, the names of
   entities that are unavailable, integrations with errors, pending updates, disk and backup info,
   results of the local network checks, and the current values of only those entities your installer
-  chose to watch. Nothing else.
+  chose to watch. Nothing else, except while the installer has the remote view open.
 - **To stop the supervision**, stop or uninstall this add-on. The installer can also remove the site in the panel.
 
 ## Setup
@@ -28,4 +35,5 @@ before you notice anything.
 
 The same agent runs in Docker on any Linux box (Raspberry Pi, mini PC, NAS) as a network probe for IT
 support: `HUB_MODE=pro`, `HUB_PRO_CODE=SP-XXXX-XXXX`, `HUB_PRO_LAN="nas=192.168.1.5:445,printer=192.168.1.20:9100"`.
-With `HUB_HA_URL` and `HUB_HA_TOKEN` it also reports a Home Assistant in that network.
+With `HUB_HA_URL` and `HUB_HA_TOKEN` it also reports a Home Assistant in that network (and the remote view
+uses that address; `HUB_PRO_UI=0` turns the view off, `HUB_PRO_UI_URL` sets another address).

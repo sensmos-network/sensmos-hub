@@ -18,6 +18,7 @@ const fs = require('fs');
 const net = require('net');
 const path = require('path');
 const { execFile } = require('child_process');
+const { UiTunnel, uiTarget } = require('./pro_ui');
 
 const CODE_RE = /^SP-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/;
 const MAX_UNAVAILABLE = 100, MAX_WATCH = 30, MAX_LAN = 20, CMD_MAX_AGE_S = 600, MAX_SNAPSHOT = 3000;
@@ -153,7 +154,7 @@ async function collectHost(env = process.env) {
 }
 
 class ProAgent {
-    constructor({ code, be = 'https://sensmos.com', dir, identity, version, ha = null, lan = '', name = '', everyS = 60, log = console.log, env = process.env, lanOpts, control = true }) {
+    constructor({ code, be = 'https://sensmos.com', dir, identity, version, ha = null, lan = '', name = '', everyS = 60, log = console.log, env = process.env, lanOpts, control = true, ui = true }) {
         this.code = normCode(code);
         if (!CODE_RE.test(this.code)) throw new Error('Sensmos Pro: installer code like SP-ABCD-2345 required (panel sensmos.com/pro → Add client)');
         this.be = String(be).replace(/\/$/, ''); this.dir = dir; this.id = identity; this.version = version;
@@ -161,6 +162,7 @@ class ProAgent {
         this.log = log; this.env = env; this.lanOpts = lanOpts;
         this.control = control; this.accountFile = path.join(dir, 'pro_account.json'); this.account = this.loadAccount(); this.done = [];
         this.watch = this.loadWatch(); this.started = Date.now(); this.offlineSince = null; this.lastErr = null;
+        this.ui = ui && ha ? new UiTunnel({ haUrl: uiTarget(env), wsUrl: this.be.replace(/^http/, 'ws') + '/v1/pro/ui-agent', identity, log }) : null;
     }
 
     loadWatch() { try { const w = JSON.parse(fs.readFileSync(path.join(this.dir, 'pro_watch.json'), 'utf8')); return Array.isArray(w) ? w.filter(x => ENTITY_RE.test(x)).slice(0, MAX_WATCH) : []; } catch { return []; } }
@@ -175,7 +177,7 @@ class ProAgent {
     async collect() {
         const [ha, host, lan] = await Promise.all([collectHa(this.ha, this.watch), collectHost(this.env), runLan(this.lan, this.lanOpts)]);
         return {
-            v: 1, agent: { version: this.version, uptime_s: Math.floor((Date.now() - this.started) / 1000), mode: this.ha ? (this.env.SUPERVISOR_TOKEN ? 'addon' : 'docker') : 'probe', name: this.name || null, offline_since: this.offlineSince, control: !!this.control, account_pinned: !!this.account },
+            v: 1, agent: { version: this.version, uptime_s: Math.floor((Date.now() - this.started) / 1000), mode: this.ha ? (this.env.SUPERVISOR_TOKEN ? 'addon' : 'docker') : 'probe', name: this.name || null, offline_since: this.offlineSince, control: !!this.control, account_pinned: !!this.account, caps: this.ui && this.control ? ['ui'] : [], ui_open: !!this.ui?.isOpen() },
             ha, host, lan,
         };
     }
@@ -306,19 +308,42 @@ class ProAgent {
                 await this.haCall('POST', '/api/services/automation/reload', {});
                 return aid;
             }
+            case 'ui_open': {   // pełny interfejs HA w przeglądarce instalatora (src/pro_ui.js)
+                if (!this.ui) throw new Error('remote Home Assistant view is off on this site');
+                if (!this.ui.ha) { let info = null; try { info = await this.supCall('GET', '/core/info'); } catch {} this.ui.setTarget(uiTarget(this.env, info || {})); }
+                return this.ui.open();
+            }
+            case 'ui_close': return this.ui ? this.ui.close('closed in the panel') : 'not open';
             case 'fast': return 'ok';   // tylko szybsze raporty (every_s w odpowiedzi BE)
             default: throw new Error('unknown action');
         }
     }
 
+    // Budzik: POST /v1/pro/wait wisi do 50 s i wraca od razu, gdy instalator wyśle polecenie; wtedy raport
+    // odbiera polecenie bez czekania na zwykły cykl. Stary BE (404) = sprawdzaj rzadko.
+    async waitLoop() {
+        while (!this.stopped) {
+            let pause = 0;
+            try {
+                const r = await fetch(this.be + '/v1/pro/wait', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(this.signed('{"wait":1}')), signal: AbortSignal.timeout(70000) });
+                const j = await r.json().catch(() => ({}));
+                if (r.ok && j.wake) await this.report().catch(() => {});
+                else if (!r.ok) pause = j.error === 'unknown action' ? 600000 : 30000;   // „unknown action” = BE bez budzika
+            } catch { pause = 30000; }
+            if (pause && !this.stopped) await new Promise(res => { this.waitT = setTimeout(res, pause); });
+        }
+    }
+
+    stopUi() { this.ui?.close('add-on stopped'); }
+
     reschedule() { clearInterval(this.t); this.t = setInterval(() => this.report().catch(e => this.log('Sensmos Pro:', e.message)), this.everyS * 1000); }
     start() {
         this.log(`Sensmos Pro agent ${this.version} — code ${this.code.slice(0, 3)}…${this.code.slice(-4)}, ${this.ha ? 'Home Assistant ' + this.ha.via : 'probe without Home Assistant'}, ${this.lan.length} LAN checks`);
-        this.report().catch(e => this.log('Sensmos Pro:', e.message));
+        this.report().catch(e => this.log('Sensmos Pro:', e.message)).finally(() => { if (this.waitBell !== false) this.waitLoop(); });
         this.reschedule();
         return this;
     }
-    stop() { clearInterval(this.t); }
+    stop() { this.stopped = true; clearInterval(this.t); clearTimeout(this.waitT); this.stopUi(); }
 }
 
 module.exports = { ProAgent, parseLan, summarizeStates, defaultGateway, runLan, collectHa, collectHost, normCode, CODE_RE };
