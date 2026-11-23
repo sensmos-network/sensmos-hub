@@ -19,6 +19,7 @@ const net = require('net');
 const path = require('path');
 const { execFile } = require('child_process');
 const { UiTunnel, uiTarget } = require('./pro_ui');
+const net2 = require('./pro_net');
 
 const CODE_RE = /^SP-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/;
 const MAX_UNAVAILABLE = 100, MAX_WATCH = 30, MAX_LAN = 20, CMD_MAX_AGE_S = 600, MAX_SNAPSHOT = 3000;
@@ -26,7 +27,8 @@ const ENTITY_RE = /^[a-z_]+\.[a-z0-9_]{1,120}$/;
 
 function normCode(c) { return String(c || '').trim().toUpperCase().replace(/\s+/g, ''); }
 
-// „nas=192.168.1.5:445, drukarka=192.168.1.20:9100, router=192.168.1.1” → [{name, host, port|null}]
+// „nas=192.168.1.5:445, drukarka=192.168.1.20:9100, router=192.168.1.1, sklep=https://sklep.pl” →
+// [{name, host, port|null}] albo {name, url} dla stron i usług HTTP(S) (status, czas, certyfikat)
 function parseLan(spec) {
     const out = [];
     for (const raw of String(spec || '').split(/[,;\n]/)) {
@@ -34,7 +36,12 @@ function parseLan(spec) {
         if (!s) continue;
         let name, target;
         const eq = s.indexOf('=');
-        if (eq > 0) { name = s.slice(0, eq).trim(); target = s.slice(eq + 1).trim(); } else { target = s; name = s; }
+        if (eq > 0 && !/^https?:\/\//i.test(s)) { name = s.slice(0, eq).trim(); target = s.slice(eq + 1).trim(); } else { target = s; name = s; }
+        if (/^https?:\/\/[^\s]+$/i.test(target)) {
+            try { const u = new URL(target); out.push({ name: (name === s ? u.hostname : name).slice(0, 40), url: u.href.slice(0, 300) }); } catch { continue; }
+            if (out.length >= MAX_LAN) break;
+            continue;
+        }
         const m = target.match(/^\[?([A-Za-z0-9.\-:]+?)\]?(?::(\d{1,5}))?$/);
         if (!m) continue;
         const port = m[2] ? Number(m[2]) : null;
@@ -80,9 +87,10 @@ function defaultGateway(file = '/proc/net/route') {
     return null;
 }
 
-async function runLan(checks, { tcp = tcpCheck, ping = pingCheck, gateway = defaultGateway() } = {}) {
+async function runLan(checks, { tcp = tcpCheck, ping = pingCheck, http = net2.httpCheck, gateway = defaultGateway() } = {}) {
     const list = gateway && !checks.some(c => c.host === gateway) ? [{ name: 'gateway', host: gateway, port: null }, ...checks] : checks;
-    return Promise.all(list.map(async c => ({ name: c.name, host: c.host, port: c.port, ...(c.port ? await tcp(c.host, c.port) : await ping(c.host)) })));
+    return Promise.all(list.map(async c => c.url ? { name: c.name, url: c.url, ...(await http(c.url)) }
+        : ({ name: c.name, host: c.host, port: c.port, ...(c.port ? await tcp(c.host, c.port) : await ping(c.host)) })));
 }
 
 async function getJson(url, token, timeoutMs = 8000) {
@@ -95,7 +103,7 @@ async function getJson(url, token, timeoutMs = 8000) {
 function summarizeStates(states, watch = []) {
     const watchSet = new Set(watch);
     const unavailable = [], updates = [], watched = [];
-    let total = 0;
+    let total = 0, backupLast = null;
     for (const s of Array.isArray(states) ? states : []) {
         const id = String(s?.entity_id || '');
         if (!ENTITY_RE.test(id)) continue;
@@ -105,10 +113,11 @@ function summarizeStates(states, watch = []) {
         const domain = id.split('.')[0];
         if (s.state === 'unavailable' && unavailable.length < MAX_UNAVAILABLE) unavailable.push({ entity_id: id, name, since: s.last_changed || null });
         if (domain === 'update' && s.state === 'on') updates.push({ entity_id: id, title: String(a.title || name).slice(0, 80), installed: a.installed_version ? String(a.installed_version).slice(0, 32) : null, latest: a.latest_version ? String(a.latest_version).slice(0, 32) : null });
+        if (id === 'sensor.backup_last_successful_automatic_backup' && !isNaN(Date.parse(s.state))) backupLast = new Date(s.state).toISOString();
         if (watchSet.has(id)) watched.push({ entity_id: id, name, state: String(s.state ?? '').slice(0, 64), unit: a.unit_of_measurement ? String(a.unit_of_measurement).slice(0, 16) : null, changed: s.last_changed || null });
     }
     for (const id of watchSet) if (!watched.some(w => w.entity_id === id)) watched.push({ entity_id: id, name: id, state: 'missing', unit: null, changed: null });
-    return { entities: total, unavailable_count: (Array.isArray(states) ? states : []).filter(s => s?.state === 'unavailable').length, unavailable, updates, watched };
+    return { entities: total, unavailable_count: (Array.isArray(states) ? states : []).filter(s => s?.state === 'unavailable').length, unavailable, updates, watched, ...(backupLast ? { backup_last: backupLast } : {}) };
 }
 
 async function collectHa(cfg, watch) {
@@ -154,7 +163,7 @@ async function collectHost(env = process.env) {
 }
 
 class ProAgent {
-    constructor({ code, be = 'https://sensmos.com', dir, identity, version, ha = null, lan = '', name = '', everyS = 60, log = console.log, env = process.env, lanOpts, control = true, ui = true }) {
+    constructor({ code, be = 'https://sensmos.com', dir, identity, version, ha = null, lan = '', name = '', everyS = 60, log = console.log, env = process.env, lanOpts, control = true, ui = true, netWatch = true, devices = null }) {
         this.code = normCode(code);
         if (!CODE_RE.test(this.code)) throw new Error('Sensmos Pro: installer code like SP-ABCD-2345 required (panel sensmos.com/pro → Add client)');
         this.be = String(be).replace(/\/$/, ''); this.dir = dir; this.id = identity; this.version = version;
@@ -162,6 +171,9 @@ class ProAgent {
         this.log = log; this.env = env; this.lanOpts = lanOpts;
         this.control = control; this.accountFile = path.join(dir, 'pro_account.json'); this.account = this.loadAccount(); this.done = [];
         this.watch = this.loadWatch(); this.started = Date.now(); this.offlineSince = null; this.lastErr = null;
+        this.netWatch = netWatch; this.netAt = 0; this.netLast = null;
+        // spis urządzeń: domyślnie w sondzie bez HA; w dodatku tylko z opcją scan_devices
+        this.devices = (devices ?? !ha) ? new net2.Devices(dir) : null;
         this.ui = ui && ha ? new UiTunnel({ haUrl: uiTarget(env), wsUrl: this.be.replace(/^http/, 'ws') + '/v1/pro/ui-agent', identity, log }) : null;
     }
 
@@ -174,11 +186,23 @@ class ProAgent {
         this.log(`Sensmos Pro: watching ${clean.length} entities chosen in the panel`);
     }
 
+    // Internet (5 pingów do 1.1.1.1 + DNS) najwyżej co 60 s, także w trybie szybkich raportów.
+    async collectNet() {
+        if (!this.netWatch) return null;
+        if (Date.now() - this.netAt >= 55000 || !this.netLast) {
+            this.netAt = Date.now();
+            this.netLast = await (this.netFn || net2.internet)().catch(() => null);
+        }
+        return { internet: this.netLast, devices: this.devices ? this.devices.scan() : null };
+    }
+
     async collect() {
-        const [ha, host, lan] = await Promise.all([collectHa(this.ha, this.watch), collectHost(this.env), runLan(this.lan, this.lanOpts)]);
+        let [ha, host, lan, net] = await Promise.all([collectHa(this.ha, this.watch), collectHost(this.env), runLan(this.lan, this.lanOpts), this.collectNet()]);
+        // HA bez Supervisora (Docker, Core): data ostatniej kopii z integracji backup (HA 2025.1+).
+        if (ha?.backup_last && !host?.backup_newest) host = { ...(host || {}), backup_newest: ha.backup_last };
         return {
             v: 1, agent: { version: this.version, uptime_s: Math.floor((Date.now() - this.started) / 1000), mode: this.ha ? (this.env.SUPERVISOR_TOKEN ? 'addon' : 'docker') : 'probe', name: this.name || null, offline_since: this.offlineSince, control: !!this.control, account_pinned: !!this.account, caps: this.ui && this.control ? ['ui'] : [], ui_open: !!this.ui?.isOpen() },
-            ha, host, lan,
+            ha, host, lan, net,
         };
     }
 
@@ -274,6 +298,34 @@ class ProAgent {
         try { return JSON.parse(t); } catch { return t; }
     }
 
+    // Jednorazowe polecenie WebSocket API HA (kopie zapasowe 2025.1+ są tylko w WS).
+    haWs(type, payload = {}, timeoutMs = 30000) {
+        if (!this.ha) return Promise.reject(new Error('no Home Assistant on this site'));
+        const WebSocket = require('ws');
+        const u = this.ha.url.replace(/^http/, 'ws') + '/api/websocket';
+        return new Promise((resolve, reject) => {
+            const ws = new WebSocket(u, { handshakeTimeout: 10000 });
+            const t = setTimeout(() => { ws.terminate(); reject(new Error('Home Assistant did not answer')); }, timeoutMs);
+            const end = (e, v) => { clearTimeout(t); try { ws.close(); } catch {} e ? reject(e) : resolve(v); };
+            ws.on('message', d => {
+                let m; try { m = JSON.parse(d); } catch { return; }
+                if (m.type === 'auth_required') ws.send(JSON.stringify({ type: 'auth', access_token: this.ha.token }));
+                else if (m.type === 'auth_invalid') end(new Error('Home Assistant token rejected'));
+                else if (m.type === 'auth_ok') ws.send(JSON.stringify({ id: 1, type, ...payload }));
+                else if (m.id === 1 && m.type === 'result') m.success ? end(null, m.result) : end(new Error(String(m.error?.message || 'HA error').slice(0, 160)));
+            });
+            ws.once('error', e => end(e));
+        });
+    }
+
+    async localBackupAgent() {
+        const info = await this.haWs('backup/agents/info');
+        const ids = (info?.agents || []).map(a => a.agent_id);
+        const id = ids.find(x => /\.local$/.test(x)) || ids[0];
+        if (!id) throw new Error('no backup location in Home Assistant');
+        return id;
+    }
+
     async supCall(method, p, body, text = false) {
         const token = this.env.SUPERVISOR_TOKEN;
         if (!token) throw new Error('needs the Home Assistant add-on (Supervisor)');
@@ -293,12 +345,17 @@ class ProAgent {
                 return (Array.isArray(st) ? st : []).slice(0, MAX_SNAPSHOT).map(s => ({ entity_id: s.entity_id, state: String(s.state ?? '').slice(0, 64), name: String(s.attributes?.friendly_name || '').slice(0, 80), unit: s.attributes?.unit_of_measurement || null, changed: s.last_changed || null }));
             }
             case 'logs': {       // ostatnie linie logu Core (zdalny podgląd błędów)
-                const t = await this.supCall('GET', '/core/logs', undefined, true);
+                const t = this.env.SUPERVISOR_TOKEN ? await this.supCall('GET', '/core/logs', undefined, true) : String(await this.haCall('GET', '/api/error_log'));
                 return t.split('\n').slice(-Math.min(Math.max(Number(a.lines) || 200, 10), 500)).join('\n');
             }
             case 'restart': await this.haCall('POST', '/api/services/homeassistant/restart', {}); return 'restarting';
             case 'reload_entry': { const e = String(a.entry_id || ''); if (!/^[A-Za-z0-9]{8,64}$/.test(e)) throw new Error('bad entry_id'); return this.haCall('POST', `/api/config/config_entries/entry/${e}/reload`); }
-            case 'backup': await this.supCall('POST', '/backups/new/full', { name: String(a.name || 'Sensmos Pro ' + new Date().toISOString().slice(0, 16)).slice(0, 64) }); return 'backup started';
+            case 'backup':
+                if (!this.env.SUPERVISOR_TOKEN) {   // HA bez Supervisora (2025.1+): kopia na dysk HA przez WebSocket
+                    await this.haWs('backup/generate', { agent_ids: [await this.localBackupAgent()], include_database: true, name: String(a.name || 'Sensmos Pro ' + new Date().toISOString().slice(0, 16)).slice(0, 64) });
+                    return 'backup started';
+                }
+                await this.supCall('POST', '/backups/new/full', { name: String(a.name || 'Sensmos Pro ' + new Date().toISOString().slice(0, 16)).slice(0, 64) }); return 'backup started';
             case 'update': await this.haCall('POST', '/api/services/update/install', { entity_id: id(a.entity_id), backup: a.backup !== false }); return 'update started';
             case 'service': await this.haCall('POST', `/api/services/${slug(a.domain)}/${slug(a.service)}`, a.data && typeof a.data === 'object' ? a.data : {}); return 'ok';
             case 'automation': {  // szybka konfiguracja: automatyzacja z szablonu panelu (id = sensmos_pro_<nazwa>)
@@ -314,6 +371,13 @@ class ProAgent {
                 return this.ui.open();
             }
             case 'ui_close': return this.ui ? this.ui.close('closed in the panel') : 'not open';
+            case 'devices': if (!this.devices) throw new Error('device list is off on this site (add-on option scan_devices)'); return this.devices.list();
+            case 'backup_schedule': {   // szybka konfiguracja: codzienna kopia w ustawieniach kopii HA (2025.1+), 7 ostatnich
+                const time = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(a.time || '')) ? a.time : '03:00';
+                const copies = Math.min(Math.max(Number(a.copies) || 7, 1), 30);
+                await this.haWs('backup/config/update', { create_backup: { agent_ids: [await this.localBackupAgent()], include_database: true }, retention: { copies }, schedule: { recurrence: 'daily', time }, automatic_backups_configured: true });
+                return `daily backup at ${time}, keeping ${copies}`;
+            }
             case 'fast': return 'ok';   // tylko szybsze raporty (every_s w odpowiedzi BE)
             default: throw new Error('unknown action');
         }

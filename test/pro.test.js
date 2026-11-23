@@ -183,6 +183,7 @@ test('polecenia: tylko podpisane przypiętym kluczem konta, świeże, bez powtó
         let b = ''; req.on('data', c => b += c); req.on('end', () => {
             calls.push([req.method, req.url, b]);
             if (req.url === '/api/states') return json(res, 200, STATES);
+            if (req.url === '/api/error_log') { res.writeHead(200, { 'content-type': 'text/plain' }); return res.end('l1\nERROR boom\n'); }
             json(res, 200, []);
         });
     });
@@ -210,13 +211,13 @@ test('polecenia: tylko podpisane przypiętym kluczem konta, świeże, bez powtó
             sign({ id: 'cmd-service-1', ts: now, action: 'service', args: { domain: 'light', service: 'turn_on', data: { entity_id: 'light.kitchen' } } }),
             sign({ id: 'cmd-snap-0001', ts: now, action: 'snapshot', args: {} }),
             sign({ id: 'cmd-auto-0001', ts: now, action: 'automation', args: { id: 'pv_alarm', config: { alias: 'PV alarm', trigger: [], action: [] } } }),
-            sign({ id: 'cmd-logs-0001', ts: now, action: 'logs', args: {} }),                            // bez Supervisora
+            sign({ id: 'cmd-logs-0001', ts: now, action: 'logs', args: {} }),                            // bez Supervisora: /api/error_log
         ];
         await a.runCommands(cmds);
         assert.deepStrictEqual(results.map(r => [r.id, r.ok, r.error || null]), [
             ['cmd-restart-1', true, null], ['cmd-restart-1', false, 'duplicate'], ['cmd-old-0001', false, 'expired'],
             ['cmd-forged-01', false, 'bad signature'], ['cmd-tamper-1', false, 'bad signature'], ['cmd-service-1', true, null],
-            ['cmd-snap-0001', true, null], ['cmd-auto-0001', true, null], ['cmd-logs-0001', false, 'needs the Home Assistant add-on (Supervisor)'],
+            ['cmd-snap-0001', true, null], ['cmd-auto-0001', true, null], ['cmd-logs-0001', true, null],
         ]);
         assert.ok(calls.some(c => c[1] === '/api/services/homeassistant/restart'));
         assert.ok(!calls.some(c => c[1].startsWith('/api/services/lock')));

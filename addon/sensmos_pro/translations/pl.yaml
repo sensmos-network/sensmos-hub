@@ -11,7 +11,7 @@ configuration:
     name: Urządzenia w sieci lokalnej do pilnowania (opcjonalnie)
     description: >-
       Po przecinku, nazwa=adres albo nazwa=adres:port, np. nas=192.168.1.5:445, drukarka=192.168.1.20:9100,
-      falownik=192.168.1.30:502. Bez portu urządzenie jest pingowane. Brama domyślna jest sprawdzana zawsze.
+      falownik=192.168.1.30:502, sklep=https://sklep.pl (status strony i data wygaśnięcia certyfikatu). Bez portu urządzenie jest pingowane. Brama domyślna jest sprawdzana zawsze.
   allow_control:
     name: Zezwól na zdalne działania
     description: >-
@@ -24,3 +24,8 @@ configuration:
       Instalator może otworzyć pełny interfejs tego Home Assistanta w swojej przeglądarce, logując się swoim
       kontem HA. Połączenie otwiera się tylko na jego podpisane polecenie i zamyka po 30 minutach bezczynności.
       Działa tylko razem z „Zezwól na zdalne działania”.
+  scan_devices:
+    name: Spis urządzeń w sieci
+    description: >-
+      Agent odczytuje tablicę ARP tego komputera (adresy MAC i IP urządzeń w sieci lokalnej) i zgłasza instalatorowi
+      nowe urządzenia. Nic nie skanuje aktywnie. Domyślnie wyłączone.

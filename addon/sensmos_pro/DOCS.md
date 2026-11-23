@@ -37,3 +37,13 @@ The same agent runs in Docker on any Linux box (Raspberry Pi, mini PC, NAS) as a
 support: `HUB_MODE=pro`, `HUB_PRO_CODE=SP-XXXX-XXXX`, `HUB_PRO_LAN="nas=192.168.1.5:445,printer=192.168.1.20:9100"`.
 With `HUB_HA_URL` and `HUB_HA_TOKEN` it also reports a Home Assistant in that network (and the remote view
 uses that address; `HUB_PRO_UI=0` turns the view off, `HUB_PRO_UI_URL` sets another address).
+
+Local checks can also be web addresses (`shop=https://shop.example.com`): the agent reports the HTTP status,
+the response time and the days until the TLS certificate expires (a device with its own certificate, such as a NAS
+or a printer, counts as working and is marked as not trusted). Every report also carries internet quality
+(packet loss and latency to 1.1.1.1, DNS); `HUB_PRO_NET=0` turns that off. With `scan_devices` (add-on) or
+`HUB_PRO_DEVICES=1` (Docker) the agent reads the ARP table and tells the installer when a device appears in the
+network for the first time; the list is kept in `/data/pro_devices.json`, only MAC and IP addresses.
+
+Without Supervisor (Home Assistant in Docker or Core) the installer can still read the Core log, start a backup
+and set a nightly backup (Home Assistant 2025.1 or newer, backups stay on the Home Assistant disk).

@@ -41,7 +41,8 @@ if (/^pro$/i.test(process.env.HUB_MODE || '') || process.env.HUB_PRO_CODE) {
     try {
         agent = new ProAgent({ code: process.env.HUB_PRO_CODE, be: cfg.be, dir: cfg.data, identity: require('./identity').load(cfg.data), version: FIRMWARE.replace(/^hub-/, 'pro-'),
             ha: require('./ha').config(), lan: process.env.HUB_PRO_LAN || '', name: process.env.HUB_PRO_NAME || '', everyS: parseInt(process.env.HUB_PRO_EVERY_S) || 60,
-            control: !/^(0|false|no|off)$/i.test(process.env.HUB_PRO_CONTROL || ''), ui: !/^(0|false|no|off)$/i.test(process.env.HUB_PRO_UI || '') });
+            control: !/^(0|false|no|off)$/i.test(process.env.HUB_PRO_CONTROL || ''), ui: !/^(0|false|no|off)$/i.test(process.env.HUB_PRO_UI || ''),
+            netWatch: !/^(0|false|no|off)$/i.test(process.env.HUB_PRO_NET || ''), devices: process.env.HUB_PRO_DEVICES ? /^(1|true|yes|on)$/i.test(process.env.HUB_PRO_DEVICES) : null });
     } catch (e) { console.error(e.message); process.exit(2); }
     agent.start();
     for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { agent.stop(); process.exit(0); });

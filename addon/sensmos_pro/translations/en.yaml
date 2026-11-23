@@ -11,7 +11,7 @@ configuration:
     name: Devices to watch in the local network (optional)
     description: >-
       Comma separated, name=address or name=address:port, e.g. nas=192.168.1.5:445, printer=192.168.1.20:9100,
-      inverter=192.168.1.30:502. Without a port the device is pinged. The default gateway is always checked.
+      inverter=192.168.1.30:502, shop=https://shop.example (site status and certificate expiry). Without a port the device is pinged. The default gateway is always checked.
   allow_control:
     name: Allow remote actions
     description: >-
@@ -24,3 +24,8 @@ configuration:
       Your installer can open the full interface of this Home Assistant in their browser and sign in with their
       own HA account. The connection opens only on their signed command and closes after 30 minutes idle.
       Works only together with "Allow remote actions".
+  scan_devices:
+    name: Device list of the local network
+    description: >-
+      The agent reads the ARP table of this machine (MAC and IP addresses of devices in the local network) and reports
+      new devices to your installer. Nothing is actively scanned. Off by default.

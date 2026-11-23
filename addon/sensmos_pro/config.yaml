@@ -1,5 +1,5 @@
 name: Sensmos Pro
-version: "0.3.0-beta2"
+version: "0.3.0-beta3"
 slug: sensmos_pro
 description: "Remote care of this Home Assistant by your installer: alerts when Home Assistant, an integration, Modbus or the internet goes down, charts, logs and signed remote actions. No wallet, no crypto."
 url: https://github.com/sensmos-network/sensmos-hub
@@ -22,9 +22,11 @@ options:
   lan_checks: ""
   allow_control: true
   allow_remote_ui: true
+  scan_devices: false
 schema:
   installer_code: match(^[Ss][Pp]-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$)
   site_name: str?
   lan_checks: str?
   allow_control: bool
   allow_remote_ui: bool
+  scan_devices: bool

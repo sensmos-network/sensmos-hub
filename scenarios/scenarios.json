@@ -1547,6 +1547,66 @@
           "attestation signed"
         ]
       }
+    },
+    {
+      "id": "hub-030-pro",
+      "component": "hub",
+      "min_version": "hub-0.3.0-beta3",
+      "hardware": {
+        "ha": true
+      },
+      "points": 10,
+      "limit_testers": 10,
+      "title": {
+        "en": "Sensmos Pro: supervise your own Home Assistant like an installer",
+        "pl": "Sensmos Pro: nadzór własnego Home Assistanta jak instalator",
+        "de": "Sensmos Pro: das eigene Home Assistant wie ein Installateur betreuen",
+        "pt": "Sensmos Pro: supervisionar o seu Home Assistant como um instalador"
+      },
+      "steps": {
+        "en": [
+          "On a computer open sensmos.com/pro and click around the sample panel. Then click Create free account and Add client, and copy the installer code SP-XXXX-XXXX.",
+          "In your Home Assistant (OS or Supervised) add the repository github.com/sensmos-network/sensmos-hub in the add-on store, install Sensmos Pro 0.3.0-beta3, paste the code in the options and start it. The site must appear in the panel within a minute.",
+          "Entities tab: Load all entities, watch 2 or 3 of them and give one a max lower than its current value. Within a minute an Out of range alert must appear. Live tab: switch a light or a switch; it must change in Home Assistant within a few seconds.",
+          "Actions tab: run Core log and Backup (the backup must show up in Home Assistant under Settings → System → Backups). Quick configurations: apply Nightly backup (Home Assistant backup settings must show a daily backup at 03:00).",
+          "Click Open Home Assistant: a new window opens, log in with your own Home Assistant account and click through the dashboard. Close it with the Sensmos Pro badge in the corner.",
+          "Optional, for IT: in the add-on options add a local check with a web address (for example router=https://192.168.1.1) and turn on scan_devices. The Local network table must show the HTTP status and certificate days, and Network devices must list your devices.",
+          "Send the package from the add-on terminal with `node /app/src/index.js diag --upload --scenario hub-030-pro --result ok` (or `fail` with the step and the exact message). If you have no add-on terminal, write the result on the Discord testers channel."
+        ],
+        "pl": [
+          "Na komputerze otwórz sensmos.com/pro i poklikaj przykładowy panel. Potem kliknij Załóż darmowe konto i Dodaj klienta, skopiuj kod instalatora SP-XXXX-XXXX.",
+          "W swoim Home Assistancie (OS albo Supervised) dodaj repozytorium github.com/sensmos-network/sensmos-hub w sklepie z dodatkami, zainstaluj Sensmos Pro 0.3.0-beta3, wklej kod w opcjach i uruchom. Obiekt ma pojawić się w panelu w ciągu minuty.",
+          "Zakładka Encje: Wczytaj wszystkie encje, zaznacz 2 lub 3 do obserwowania i jednej ustaw max niższy niż obecna wartość. W ciągu minuty ma pojawić się alarm Poza zakresem. Zakładka Na żywo: przełącz światło albo przełącznik; w Home Assistancie ma się zmienić w kilka sekund.",
+          "Zakładka Działania: uruchom Log Core i Kopię (kopia ma być w Home Assistancie w Ustawienia → System → Kopie zapasowe). Szybkie konfiguracje: zastosuj Nocną kopię (ustawienia kopii w Home Assistancie mają pokazać codzienną kopię o 3:00).",
+          "Kliknij Otwórz Home Assistanta: otworzy się nowe okno, zaloguj się swoim kontem Home Assistanta i poklikaj pulpit. Zamknij je paskiem Sensmos Pro w rogu.",
+          "Opcjonalnie, dla informatyków: w opcjach dodatku dodaj kontrolę z adresem strony (np. router=https://192.168.1.1) i włącz scan_devices. Tabela Sieć lokalna ma pokazać status HTTP i dni certyfikatu, a Urządzenia w sieci listę Twoich urządzeń.",
+          "Wyślij paczkę z terminala dodatku: `node /app/src/index.js diag --upload --scenario hub-030-pro --result ok` (albo `fail` z krokiem i dokładnym komunikatem). Jeśli nie masz terminala dodatku, napisz wynik na kanale testers na Discordzie."
+        ],
+        "de": [
+          "Öffne am Computer sensmos.com/pro und klick dich durch das Beispielpanel. Dann Kostenloses Konto anlegen und Kunden hinzufügen klicken und den Installateur-Code SP-XXXX-XXXX kopieren.",
+          "Füge in deinem Home Assistant (OS oder Supervised) das Repository github.com/sensmos-network/sensmos-hub im Add-on-Store hinzu, installiere Sensmos Pro 0.3.0-beta3, trage den Code in den Optionen ein und starte es. Das Objekt muss innerhalb einer Minute im Panel erscheinen.",
+          "Tab Entitäten: Alle Entitäten laden, 2 oder 3 beobachten und einer ein Maximum unter dem aktuellen Wert geben. Innerhalb einer Minute muss der Alarm Außerhalb des Bereichs kommen. Tab Live: ein Licht oder einen Schalter umschalten; in Home Assistant muss es sich in wenigen Sekunden ändern.",
+          "Tab Aktionen: Core-Log und Backup ausführen (das Backup muss in Home Assistant unter Einstellungen → System → Backups erscheinen). Schnellkonfigurationen: Nächtliches Backup anwenden (die Backup-Einstellungen in Home Assistant müssen ein tägliches Backup um 3:00 zeigen).",
+          "Home Assistant öffnen klicken: ein neues Fenster öffnet sich, mit deinem Home-Assistant-Konto anmelden und durch das Dashboard klicken. Mit dem Sensmos-Pro-Hinweis in der Ecke schließen.",
+          "Optional, für IT: in den Add-on-Optionen eine Prüfung mit Webadresse hinzufügen (z. B. router=https://192.168.1.1) und scan_devices einschalten. Die Tabelle Lokales Netz muss HTTP-Status und Zertifikatstage zeigen, Geräte im Netz deine Geräte.",
+          "Paket aus dem Add-on-Terminal senden: `node /app/src/index.js diag --upload --scenario hub-030-pro --result ok` (oder `fail` mit Schritt und genauer Meldung). Ohne Add-on-Terminal das Ergebnis im Discord-Kanal testers schreiben."
+        ],
+        "pt": [
+          "Num computador abra sensmos.com/pro e explore o painel de exemplo. Depois clique em Criar conta grátis e Adicionar cliente e copie o código de instalador SP-XXXX-XXXX.",
+          "No seu Home Assistant (OS ou Supervised) adicione o repositório github.com/sensmos-network/sensmos-hub na loja de add-ons, instale o Sensmos Pro 0.3.0-beta3, cole o código nas opções e inicie. O local tem de aparecer no painel em um minuto.",
+          "Separador Entidades: Carregar todas, vigiar 2 ou 3 e dar a uma um máximo abaixo do valor atual. Em um minuto tem de aparecer o alerta Fora do intervalo. Separador Ao vivo: ligue uma luz ou um interruptor; no Home Assistant tem de mudar em poucos segundos.",
+          "Separador Ações: execute Registo do Core e Cópia (a cópia tem de aparecer no Home Assistant em Definições → Sistema → Cópias de segurança). Configurações rápidas: aplique Cópia noturna (as definições de cópia do Home Assistant têm de mostrar uma cópia diária às 3:00).",
+          "Clique em Abrir Home Assistant: abre uma nova janela, entre com a sua conta do Home Assistant e explore o painel. Feche com o selo Sensmos Pro no canto.",
+          "Opcional, para TI: nas opções do add-on adicione uma verificação com endereço web (por exemplo router=https://192.168.1.1) e ligue scan_devices. A tabela Rede local tem de mostrar o estado HTTP e os dias do certificado, e Dispositivos na rede a lista dos seus dispositivos.",
+          "Envie o pacote pelo terminal do add-on: `node /app/src/index.js diag --upload --scenario hub-030-pro --result ok` (ou `fail` com o passo e a mensagem exata). Sem terminal do add-on, escreva o resultado no canal testers do Discord."
+        ]
+      },
+      "expected": {
+        "en": "The site appears in the panel, alerts, live switches, log, backup, nightly backup and the full Home Assistant window all work on a real installation.",
+        "pl": "Obiekt pojawia się w panelu, alarmy, przełączniki na żywo, log, kopia, nocna kopia i pełne okno Home Assistanta działają na prawdziwej instalacji.",
+        "de": "Das Objekt erscheint im Panel; Alarme, Live-Schalter, Log, Backup, nächtliches Backup und das volle Home-Assistant-Fenster funktionieren auf einer echten Installation.",
+        "pt": "O local aparece no painel; alertas, interruptores ao vivo, registo, cópia, cópia noturna e a janela completa do Home Assistant funcionam numa instalação real."
+      }
     }
   ]
 }
